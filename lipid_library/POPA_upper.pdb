@@ -1,0 +1,118 @@
+CRYST1    0.000    0.000    0.000  90.00  90.00  90.00 P 1           1
+ATOM      1  P   POPAM   1      -1.409  -1.507  19.207  1.00-19.36      MEMB  
+ATOM      2  O13 POPAM   1      -0.222  -2.331  19.438  1.00-19.22      MEMB  
+ATOM      3  O14 POPAM   1      -2.727  -2.144  19.141  1.00-19.09      MEMB  
+ATOM      4  O12 POPAM   1      -1.495  -0.683  20.537  1.00  0.00      MEMB  
+ATOM      5  H12 POPAM   1      -1.263  -1.300  21.240  1.00  0.00      MEMB  
+ATOM      6  O11 POPAM   1      -1.190  -0.475  18.063  1.00-18.21      MEMB  
+ATOM      7  C1  POPAM   1       0.025   0.282  17.996  1.00-18.44      MEMB  
+ATOM      8  HA  POPAM   1       0.878  -0.185  18.555  1.00  0.00      MEMB  
+ATOM      9  HB  POPAM   1      -0.124   1.298  18.416  1.00  0.00      MEMB  
+ATOM     10  C2  POPAM   1       0.470   0.402  16.529  1.00-17.14      MEMB  
+ATOM     11  HS  POPAM   1       1.210   1.233  16.421  1.00  0.00      MEMB  
+ATOM     12  O21 POPAM   1      -0.628   0.532  15.602  1.00-16.82      MEMB  
+ATOM     13  C21 POPAM   1      -1.217   1.701  15.696  1.00-15.67      MEMB  
+ATOM     14  O22 POPAM   1      -0.737   2.697  16.206  1.00-15.58      MEMB  
+ATOM     15  C22 POPAM   1      -2.545   1.701  14.935  1.00-14.56      MEMB  
+ATOM     16  H2R POPAM   1      -2.370   1.304  13.917  1.00  0.00      MEMB  
+ATOM     17  H2S POPAM   1      -2.853   2.766  14.863  1.00  0.00      MEMB  
+ATOM     18  C3  POPAM   1       1.182  -0.887  16.189  1.00-17.41      MEMB  
+ATOM     19  HX  POPAM   1       0.426  -1.704  16.088  1.00  0.00      MEMB  
+ATOM     20  HY  POPAM   1       1.876  -1.182  16.997  1.00  0.00      MEMB  
+ATOM     21  O31 POPAM   1       1.961  -0.620  15.039  1.00-16.30      MEMB  
+ATOM     22  C31 POPAM   1       1.557  -1.246  13.993  1.00-16.62      MEMB  
+ATOM     23  O32 POPAM   1       0.605  -2.001  13.869  1.00-17.76      MEMB  
+ATOM     24  C32 POPAM   1       2.644  -1.059  13.030  1.00-15.28      MEMB  
+ATOM     25  H2X POPAM   1       3.535  -1.659  13.321  1.00  0.00      MEMB  
+ATOM     26  H2Y POPAM   1       2.965  -0.006  12.901  1.00  0.00      MEMB  
+ATOM     27  C23 POPAM   1      -3.662   0.916  15.658  1.00-13.21      MEMB  
+ATOM     28  H3R POPAM   1      -3.762   1.346  16.683  1.00  0.00      MEMB  
+ATOM     29  H3S POPAM   1      -3.372  -0.149  15.789  1.00  0.00      MEMB  
+ATOM     30  C24 POPAM   1      -5.048   1.036  14.989  1.00-12.21      MEMB  
+ATOM     31  H4R POPAM   1      -5.306   2.118  14.940  1.00  0.00      MEMB  
+ATOM     32  H4S POPAM   1      -5.793   0.557  15.665  1.00  0.00      MEMB  
+ATOM     33  C25 POPAM   1      -5.219   0.443  13.575  1.00-10.99      MEMB  
+ATOM     34  H5R POPAM   1      -4.575   0.980  12.851  1.00  0.00      MEMB  
+ATOM     35  H5S POPAM   1      -6.278   0.660  13.288  1.00  0.00      MEMB  
+ATOM     36  C26 POPAM   1      -5.040  -1.083  13.461  1.00-10.21      MEMB  
+ATOM     37  H6R POPAM   1      -5.673  -1.440  12.615  1.00  0.00      MEMB  
+ATOM     38  H6S POPAM   1      -5.418  -1.563  14.392  1.00  0.00      MEMB  
+ATOM     39  C27 POPAM   1      -3.606  -1.574  13.185  1.00 -8.93      MEMB  
+ATOM     40  H7R POPAM   1      -3.617  -2.689  13.222  1.00  0.00      MEMB  
+ATOM     41  H7S POPAM   1      -2.936  -1.228  14.002  1.00  0.00      MEMB  
+ATOM     42  C28 POPAM   1      -3.029  -1.105  11.834  1.00 -8.22      MEMB  
+ATOM     43  H8R POPAM   1      -2.914   0.000  11.865  1.00  0.00      MEMB  
+ATOM     44  H8S POPAM   1      -3.756  -1.330  11.026  1.00  0.00      MEMB  
+ATOM     45  C29 POPAM   1      -1.684  -1.721  11.553  1.00 -7.14      MEMB  
+ATOM     46  H91 POPAM   1      -0.897  -1.395  12.249  1.00  0.00      MEMB  
+ATOM     47 C210 POPAM   1      -1.368  -2.607  10.589  1.00 -5.83      MEMB  
+ATOM     48 H101 POPAM   1      -0.324  -2.953  10.517  1.00  0.00      MEMB  
+ATOM     49 C211 POPAM   1      -2.298  -3.197   9.562  1.00 -5.10      MEMB  
+ATOM     50 H11R POPAM   1      -3.346  -3.210   9.933  1.00  0.00      MEMB  
+ATOM     51 H11S POPAM   1      -2.014  -4.256   9.374  1.00  0.00      MEMB  
+ATOM     52 C212 POPAM   1      -2.262  -2.445   8.218  1.00 -3.64      MEMB  
+ATOM     53 H12R POPAM   1      -2.512  -1.371   8.369  1.00  0.00      MEMB  
+ATOM     54 H12S POPAM   1      -3.050  -2.879   7.560  1.00  0.00      MEMB  
+ATOM     55 C213 POPAM   1      -0.912  -2.565   7.494  1.00 -3.35      MEMB  
+ATOM     56 H13R POPAM   1      -0.654  -3.646   7.433  1.00  0.00      MEMB  
+ATOM     57 H13S POPAM   1      -0.114  -2.063   8.087  1.00  0.00      MEMB  
+ATOM     58 C214 POPAM   1      -0.935  -1.984   6.070  1.00 -1.90      MEMB  
+ATOM     59 H14R POPAM   1      -1.858  -2.312   5.541  1.00  0.00      MEMB  
+ATOM     60 H14S POPAM   1      -0.065  -2.407   5.516  1.00  0.00      MEMB  
+ATOM     61 C215 POPAM   1      -0.836  -0.449   6.030  1.00 -1.70      MEMB  
+ATOM     62 H15R POPAM   1      -0.021  -0.140   6.719  1.00  0.00      MEMB  
+ATOM     63 H15S POPAM   1      -1.763   0.019   6.414  1.00  0.00      MEMB  
+ATOM     64 C216 POPAM   1      -0.541   0.076   4.616  1.00 -0.22      MEMB  
+ATOM     65 H16R POPAM   1      -1.346  -0.224   3.915  1.00  0.00      MEMB  
+ATOM     66 H16S POPAM   1       0.363  -0.459   4.279  1.00  0.00      MEMB  
+ATOM     67 C217 POPAM   1      -0.350   1.602   4.530  1.00 -0.04      MEMB  
+ATOM     68 H17R POPAM   1       0.507   1.915   5.168  1.00  0.00      MEMB  
+ATOM     69 H17S POPAM   1      -1.262   2.092   4.933  1.00  0.00      MEMB  
+ATOM     70 C218 POPAM   1      -0.126   2.120   3.110  1.00  1.27      MEMB  
+ATOM     71 H18R POPAM   1      -0.981   1.871   2.449  1.00  0.00      MEMB  
+ATOM     72 H18S POPAM   1       0.780   1.653   2.678  1.00  0.00      MEMB  
+ATOM     73 H18T POPAM   1       0.022   3.223   3.098  1.00  0.00      MEMB  
+ATOM     74  C33 POPAM   1       2.100  -1.584  11.769  1.00-14.71      MEMB  
+ATOM     75  H3X POPAM   1       1.144  -1.180  11.402  1.00  0.00      MEMB  
+ATOM     76  H3Y POPAM   1       1.859  -2.650  11.803  1.00  0.00      MEMB  
+ATOM     77  C34 POPAM   1       3.223  -1.294  10.861  1.00-13.69      MEMB  
+ATOM     78  H4X POPAM   1       3.235  -2.322  10.580  1.00  0.00      MEMB  
+ATOM     79  H4Y POPAM   1       4.246  -1.214  11.281  1.00  0.00      MEMB  
+ATOM     80  C35 POPAM   1       2.796  -0.118   9.977  1.00-12.41      MEMB  
+ATOM     81  H5X POPAM   1       3.317   0.758  10.412  1.00  0.00      MEMB  
+ATOM     82  H5Y POPAM   1       1.697  -0.008   9.972  1.00  0.00      MEMB  
+ATOM     83  C36 POPAM   1       3.179  -0.286   8.544  1.00-11.31      MEMB  
+ATOM     84  H6X POPAM   1       2.559  -1.038   8.018  1.00  0.00      MEMB  
+ATOM     85  H6Y POPAM   1       4.189  -0.619   8.839  1.00  0.00      MEMB  
+ATOM     86  C37 POPAM   1       3.278   0.784   7.462  1.00-10.09      MEMB  
+ATOM     87  H7X POPAM   1       4.340   1.114   7.392  1.00  0.00      MEMB  
+ATOM     88  H7Y POPAM   1       2.619   1.624   7.728  1.00  0.00      MEMB  
+ATOM     89  C38 POPAM   1       2.880   0.185   6.085  1.00 -8.75      MEMB  
+ATOM     90  H8X POPAM   1       1.798   0.009   6.031  1.00  0.00      MEMB  
+ATOM     91  H8Y POPAM   1       3.270  -0.844   5.941  1.00  0.00      MEMB  
+ATOM     92  C39 POPAM   1       3.290   1.024   4.881  1.00 -7.61      MEMB  
+ATOM     93  H9X POPAM   1       4.362   1.310   4.877  1.00  0.00      MEMB  
+ATOM     94  H9Y POPAM   1       2.740   1.983   4.883  1.00  0.00      MEMB  
+ATOM     95 C310 POPAM   1       3.040   0.259   3.599  1.00 -6.31      MEMB  
+ATOM     96 H10X POPAM   1       1.974   0.024   3.471  1.00  0.00      MEMB  
+ATOM     97 H10Y POPAM   1       3.576  -0.714   3.521  1.00  0.00      MEMB  
+ATOM     98 C311 POPAM   1       3.435   1.109   2.441  1.00 -5.19      MEMB  
+ATOM     99 H11X POPAM   1       4.528   1.227   2.395  1.00  0.00      MEMB  
+ATOM    100 H11Y POPAM   1       2.996   2.131   2.490  1.00  0.00      MEMB  
+ATOM    101 C312 POPAM   1       2.951   0.413   1.223  1.00 -3.86      MEMB  
+ATOM    102 H12X POPAM   1       2.161  -0.341   1.416  1.00  0.00      MEMB  
+ATOM    103 H12Y POPAM   1       3.841  -0.133   0.815  1.00  0.00      MEMB  
+ATOM    104 C313 POPAM   1       2.553   1.468   0.243  1.00 -2.61      MEMB  
+ATOM    105 H13X POPAM   1       2.396   1.034  -0.736  1.00  0.00      MEMB  
+ATOM    106 H13Y POPAM   1       3.221   2.339   0.322  1.00  0.00      MEMB  
+ATOM    107 C314 POPAM   1       1.338   2.247   0.193  1.00 -1.34      MEMB  
+ATOM    108 H14X POPAM   1       1.246   2.906   1.063  1.00  0.00      MEMB  
+ATOM    109 H14Y POPAM   1       0.665   1.374   0.216  1.00  0.00      MEMB  
+ATOM    110 C315 POPAM   1       1.538   3.061  -1.117  1.00 -0.02      MEMB  
+ATOM    111 H15X POPAM   1       1.724   2.436  -2.024  1.00  0.00      MEMB  
+ATOM    112 H15Y POPAM   1       2.558   3.421  -1.059  1.00  0.00      MEMB  
+ATOM    113 C316 POPAM   1       0.370   4.053  -1.427  1.00  0.33      MEMB  
+ATOM    114 H16X POPAM   1      -0.057   4.331  -0.448  1.00  0.00      MEMB  
+ATOM    115 H16Y POPAM   1      -0.510   3.685  -1.969  1.00  0.00      MEMB  
+ATOM    116 H16Z POPAM   1       0.616   4.907  -2.076  1.00  0.00      MEMB  
+END
