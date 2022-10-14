@@ -8,18 +8,20 @@ class PDB:
     the proper formatting for which they are notoriously frustrating to work
     with.
     """
-    def __init__(self, filename: str, resids: List[int], output_path: str = os.getcwd(),
-                 resname: str = 'POV'):
-        self.resids = resids
-        self.output_path = output_path
-        self.resname = resname
-        
+    def __init__(self, filename: str, resids: List[int] = [0], 
+                 output_path: str = os.getcwd(), resname: str = 'POV'):
+
         if filename[-4:] != '.pdb':
             self.filename = f'{filename}.pdb'
         elif '.' in filename:
             self.filename = f'{filename.split(".")[0]}.pdb'
         else:
             self.filename = filename
+
+        self.resids = resids
+        self.output_path = output_path
+        self.resname = resname
+        
 
 
     @staticmethod
@@ -40,7 +42,7 @@ class PDB:
         _r0, _r1 = _pdb_info['resid']
         parsed = []
         for line in pdbcontents:
-            if int(line[_r0:_r1].strip()) in resids:
+            if int(line[_r0:_r1].strip()) in resids or not resids[0]:
                 parsed.append([line[x:y] for x,y in _pdb_info.values()])
 
         return parsed
@@ -66,3 +68,12 @@ class PDB:
             for line in contents:
                 outline = PDB.format_line(line)
                 outfile.write(outline)
+
+
+class rtfParser:
+    """
+    This class parses CHARMM rtf parameter files to obtain lipid bonded
+    parameters to be used in cryo-em lipid construction.
+    """
+    def __init__(self):
+        pass
