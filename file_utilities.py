@@ -10,16 +10,22 @@ class PDB:
     """
     def __init__(self, filename: str, resids: List[int], output_path: str = os.getcwd(),
                  resname: str = 'POV'):
-        self.filename = filename
         self.resids = resids
         self.output_path = output_path
         self.resname = resname
+        
+        if filename[-4:] != '.pdb':
+            self.filename = f'{filename}.pdb'
+        elif '.' in filename:
+            self.filename = f'{filename.split(".")[0]}.pdb'
+        else:
+            self.filename = filename
 
 
     @staticmethod
-    def parse_pdb(pdbcontents):
-        _pdb_info = {'atom':     [0, 6],
-                     'atomid':   [6, 11],
+    def parse_pdb(pdbcontents: List[str], resids: List[int]) -> List[str]:
+        _pdb_info = {'atom':     [0,   6],
+                     'atomid':   [6,  11],
                      'atomname': [11, 17],
                      'resname':  [17, 20],
                      'chain':    [20, 23],
@@ -31,30 +37,32 @@ class PDB:
                      'beta':     [60, 66],
                      'segname':  [66, -1]}
 
+        _r0, _r1 = _pdb_info['resid']
         parsed = []
         for line in pdbcontents:
-            parsed.append([line[x:y] for x,y in _pdb_info.values()])
+            if int(line[_r0:_r1].strip()) in resids:
+                parsed.append([line[x:y] for x,y in _pdb_info.values()])
 
         return parsed
 
 
     @property
-    def pdb_file(self):
-        contents = open(self.filename, 'r').readlines()
-        contents = [line for line in contents if line[:4] in ['ATOM', 'HETA']]
-        return PDB.parse_pdb(contents)
+    def contents(self) -> List[str]:
+        lines = open(self.filename, 'r').readlines()
+        lines = [line for line in lines if self.resname in line] 
+        return PDB.parse_pdb(lines, self.resids)
     
     
     @staticmethod
     def format_line(line: Union[str, int, float]) -> str:
         _formatting = ['<6', '<5', '<6', '<3', '<3', '<3',
-                      '<12', '<8', '<8', '<6' '<6']
+                      '<12', '<8', '<8', '<6', '<6']
         newline = [f'{l:{f}}' for l, f in zip(line, _formatting)]
-        return ''.join(newline)
+        return f'{"".join(newline)}\n'
 
 
-    def write_to_pdb_file(self):
-        with open(self.filepath, 'w') as outfile:
-            for line in self.lipid:
-                outline = format_line(line)
+    def write_to_pdb_file(self, contents: List[str]) -> None:
+        with open(f'{self.output_path}/processed_{self.filename}', 'w') as outfile:
+            for line in contents:
+                outline = PDB.format_line(line)
                 outfile.write(outline)
