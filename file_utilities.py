@@ -75,5 +75,25 @@ class rtfParser:
     This class parses CHARMM rtf parameter files to obtain lipid bonded
     parameters to be used in cryo-em lipid construction.
     """
-    def __init__(self):
+    def __init__(self, lipids: List[str] = ['POPE','POPC','POPG','POPS',
+                                            'POPI24','CHL1','PVCL2','PSM']):
+        self.lipids = lipids
+        
+        self._rtfs = self.rtfs(self.lipids)
+
+
+    @property
+    def rtfs(self, lips: List[str]) -> dict[str]:
+        _files = {'top_all36_lipids.rtf': ['POPE','POPC','POPG','POPS'],
+                 'toppar_all36_lipid_inositol.str': ['POPI24'],
+                 'toppar_all36_lipid_cholesterol.str': ['CHL1'],
+                 'toppar_all36_lipid_cardiolipin.str': ['PVCL2'],
+                 'toppar_all36_lipid_sphingo.str': ['PSM']}
+
+        files = [key for lip in lips for key, val in _files.items() if lip in val]
+        return {lip: rtfParser.parse_rtf(lip, f) for lip, f in zip(lips, files)}
+
+
+    @staticmethod
+    def parse_rtf(lipid, _file):
         pass
