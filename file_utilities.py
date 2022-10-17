@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import os
-from typing import List, Union
+from typing import Dict, List, Union
 
 class PDB:
     """
@@ -22,7 +22,6 @@ class PDB:
         self.output_path = output_path
         self.resname = resname
         
-
 
     @staticmethod
     def parse_pdb(pdbcontents: List[str], resids: List[int]) -> List[str]:
@@ -76,24 +75,68 @@ class rtfParser:
     parameters to be used in cryo-em lipid construction.
     """
     def __init__(self, lipids: List[str] = ['POPE','POPC','POPG','POPS',
-                                            'POPI24','CHL1','PVCL2','PSM']):
+                                            'POPI24','CHL1','PVCL2']):
         self.lipids = lipids
         
-        self._rtfs = self.rtfs(self.lipids)
+        self._rtfs = self.get_rtfs
 
 
     @property
-    def rtfs(self, lips: List[str]) -> dict[str]:
-        _files = {'top_all36_lipids.rtf': ['POPE','POPC','POPG','POPS'],
+    def get_rtfs(self) -> dict[str]:
+        _files = {'top_all36_lipid.rtf': ['POPE','POPC','POPG','POPS'],
                  'toppar_all36_lipid_inositol.str': ['POPI24'],
                  'toppar_all36_lipid_cholesterol.str': ['CHL1'],
-                 'toppar_all36_lipid_cardiolipin.str': ['PVCL2'],
-                 'toppar_all36_lipid_sphingo.str': ['PSM']}
+                 'toppar_all36_lipid_bacterial.str': ['PVCL2']}
 
-        files = [key for lip in lips for key, val in _files.items() if lip in val]
-        return {lip: rtfParser.parse_rtf(lip, f) for lip, f in zip(lips, files)}
+        all_rtfs = {}
+        for f in _files.keys():
+            all_rtfs.update(rtfParser.unpack_rtf(f))
+        
+        rtfs = {lip: rtfParser.deconvolute_ic_table(all_rtfs[lip]) for lip in self.lipids}
+
+        return rtfs
 
 
     @staticmethod
-    def parse_rtf(lipid, _file):
-        pass
+    def unpack_rtf(_file: str) -> Dict[str, List[str]]:
+        with open(f'rtf_files/{_file}', 'r') as rfile:
+            ics = {}
+            for line in rfile:
+                if line[:4] == 'RESI':
+                    resi = line[5:11].strip()
+                    ics.update({resi: []})
+                elif line[:2] == 'IC':
+                    ics[resi].append(line.strip())
+
+        return ics
+
+
+    @staticmethod
+    def deconvolute_ic_table(ic_table: List[str]) -> Dict[str, Dict[str, List[float]]]:
+        bonds = {}
+        angles = {}
+        dihedrals = {}
+        impropers = {}
+        for line in ic_table:
+            _, a1, a2, a3, a4, *params = [ele.strip() for ele in line.split()]
+            # handle case of ! defines S chirality comment
+            if len(params) > 5:
+                params = params[:5]
+
+            params = [float(param) for param in params]
+            # handle improper dihedral notation
+            if '*' in a3:
+                a3 = a3[1:]
+                impr = True
+            else:
+                impr = False
+
+            bonds.update({f'{a1}-{a2}': params[0], f'{a3}-{a4}': params[-1]})
+            angles.update({f'{a1}-{a2}-{a3}': params[1], f'{a2}-{a3}-{a4}': params[-2]})
+
+            if impr:
+                impropers.update({f'{a1}-{a2}-{a3}-{a4}': params[2]})
+            else:
+                dihedrals.update({f'{a1}-{a2}-{a3}-{a4}': params[2]})
+
+        return {'bond': bonds, 'angle': angles, 'dihedral': dihedrals, 'improper': impropers}
