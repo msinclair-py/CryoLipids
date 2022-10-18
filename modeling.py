@@ -46,3 +46,34 @@ class Lipid(PDB):
         plane_normal = np.cross(v1, v2)
         return 90 - np.arccos(plane_normal @ v3)
 
+
+def calc_dihedral(u1, u2, u3, u4):
+    """ Calculate dihedral angle method. From bioPython.PDB
+    (adapted to np.array)
+    Calculate the dihedral angle between 4 vectors
+    representing 4 connected points. The angle is in
+    [-pi, pi].
+    """
+
+    a1 = u2 - u1
+    a2 = u3 - u2
+    a3 = u4 - u3
+
+    v1 = np.cross(a1, a2)
+    v1 = v1 / (v1 * v1).sum(-1)**0.5
+    v2 = np.cross(a2, a3)
+    v2 = v2 / (v2 * v2).sum(-1)**0.5
+    porm = np.sign((v1 * a3).sum(-1))
+    rad = np.arccos((v1*v2).sum(-1) / ((v1**2).sum(-1) * (v2**2).sum(-1))**0.5)
+    if not porm == 0:
+        rad = rad * porm
+
+    return rad
+
+a = np.array([1219.7, 4106.1, -7366.7])
+b = np.array([1277.1, 4016.6, -7447.1])
+c = np.array([1398.6, 3944.8, -7407.8])
+d = np.array([1501.2, 3943.2, -7521.3])
+
+alpha = calc_dihedral(a,b,c,d)
+
