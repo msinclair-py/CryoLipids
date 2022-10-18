@@ -63,7 +63,9 @@ class PDB:
 
 
     def write_to_pdb_file(self, contents: List[str]) -> None:
-        with open(f'{self.output_path}/processed_{self.filename}', 'w') as outfile:
+        fname = os.path.join(self.output_path, f'processed_{os.path.basename(self.filename)}')
+        
+        with open(fname, 'w') as outfile:
             for line in contents:
                 outline = PDB.format_line(line)
                 outfile.write(outline)
