@@ -34,7 +34,7 @@ class Lipid(PDB):
 
     @staticmethod
     def measure_dihedral(a: np.ndarray, b: np.ndarray,
-                      c: np.ndarray, d: np.ndarray) -> float:
+                         c: np.ndarray, d: np.ndarray) -> float:
         v1, v2, v3 = Lipid.vectorize(b, a, c, b, d, c)
         norm1 = np.cross(v1, v2)
         norm2 = np.cross(v2, v3)
@@ -53,4 +53,16 @@ class Lipid(PDB):
                          c: np.ndarray, d: np.ndarray) -> float:
         v1, v2, v3 = Lipid.vectorize(a, b, d, b, c, b)
         plane_normal = np.cross(v1, v2)
-        return 90 - np.arccos(plane_normal @ v3)
+        return 90 - np.arccos(plane_normal @ v3) * 180 / np.pi
+
+    
+    def rotate_angle():
+        pass
+
+
+    def rotate_dihedral():
+        pass
+
+
+    def rotate_improper():
+        pass
