@@ -9,7 +9,8 @@ pdb.write_to_pdb_file(pdb.contents)
 # read in rtf files
 parse = rtfParser()
 rtfs = parse.get_rtfs
+graphs = parse.connectivity_graphs
 
 # read in lipid(s) to be modeled
-lipid = Lipid('toy_models/model1.pdb', 5, 'POV', rtfs['POPC'])
+lipid = Lipid('toy_models/model1.pdb', 5, 'POV', rtfs['POPC'], graphs['POPC'])
 lipid.model()

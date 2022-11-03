@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import os
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Set
 
 class PDB:
     """
@@ -129,16 +129,48 @@ class rtfParser:
             # handle improper dihedral notation
             if '*' in a3:
                 a3 = a3[1:]
-                impr = True
-            else:
-                impr = False
-
-            bonds.update({f'{a1}-{a2}': params[0], f'{a3}-{a4}': params[-1]})
-            angles.update({f'{a1}-{a2}-{a3}': params[1], f'{a2}-{a3}-{a4}': params[-2]})
-
-            if impr:
+                bonds.update({f'{a1}-{a3}': params[0], f'{a3}-{a4}': params[-1]})
                 impropers.update({f'{a1}-{a2}-{a3}-{a4}': params[2]})
+
             else:
+                bonds.update({f'{a1}-{a2}': params[0], f'{a3}-{a4}': params[-1]})
                 dihedrals.update({f'{a1}-{a2}-{a3}-{a4}': params[2]})
 
+            angles.update({f'{a1}-{a2}-{a3}': params[1], f'{a2}-{a3}-{a4}': params[-2]})
+
         return {'bond': bonds, 'angle': angles, 'dihedral': dihedrals, 'improper': impropers}
+
+
+    @staticmethod
+    def generate_graph(rtf_dict: Dict[str,float]) -> Dict[str, Set[str]]:
+        graph = {}
+        for key in rtfs['POPE']['bond'].keys():
+            a1, a2 = key.split('-')
+            try:
+                graph[a1].add(a2)
+            except KeyError:
+                graph.update({a1: {a2}})
+
+        return graph
+
+
+    @staticmethod
+    def generate_edges(graph: Dict[str, Set[str]]) -> List[str]:
+        edges = []
+        for node in graph:
+            for neighbor in graph[node]:
+                if not any(x in edges for x in [{node, neighbor}, 
+                                                {neighbor, node}]):
+                    edges.append({node, neighbor})
+
+        return edges
+
+
+    @property
+    def connectivity_graphs(self) -> Dict[str, Dict[str, str]]:
+        edges = {}
+        for lipid in self._rtfs:
+            graph = self.generate_graph(self._rtfs[lipid])
+            edges.update({lipid: self.generate_edges(graph)})
+
+        return edges

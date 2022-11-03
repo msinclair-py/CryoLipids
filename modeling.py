@@ -6,12 +6,15 @@ import numpy as np
 class Lipid(PDB):
     """
     Class for modeling a single lipid of resID `resid` and resType `restype`
-    using an input CHARMM IC table.
+    using an input CHARMM IC table and connectivity graph.
     """
     def __init__(self, pdbfile: str, resid: int, restype: str = 'POV', 
-                        ic_table: Dict[str, Dict[str, float]]):
+                            ic_table: Dict[str, Dict[str, float]],
+                            graph: Dict[str, Dict[str, str]]):
+
         super().__init__(pdbfile, [resid], resname=restype)
         self.ic_table = ic_table
+        self.graph = graph
         self.pdb_contents = self.contents
 
 
