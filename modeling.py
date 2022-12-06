@@ -8,9 +8,9 @@ class Lipid(PDB):
     Class for modeling a single lipid of resID `resid` and resType `restype`
     using an input CHARMM IC table and connectivity graph.
     """
-    def __init__(self, pdbfile: str, resid: int, restype: str = 'POV', 
-                            ic_table: Dict[str, Dict[str, float]],
-                            graph: Dict[str, Dict[str, str]]):
+    def __init__(self, pdbfile: str, resid: int, 
+                    ic_table: Dict[str, Dict[str, float]],
+                    graph: Dict[str, Dict[str, str]], restype: str = 'POV'):
 
         super().__init__(pdbfile, [resid], resname=restype)
         self.ic_table = ic_table
@@ -24,7 +24,7 @@ class Lipid(PDB):
 
     @staticmethod
     def vectorize(*args) -> List[np.ndarray]:
-        assert len(args)%2 = 0,"ERROR: Must provide even number of points!"
+        assert len(args)%2 == 0,"ERROR: Must provide even number of points!"
         vecs = [args[2*x] - args[2*x+1] for x in range(int(len(args)/2))]
         return [vec/np.linalg.norm(vec) for vec in vecs]
 

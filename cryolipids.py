@@ -12,5 +12,6 @@ rtfs = parse.get_rtfs
 graphs = parse.connectivity_graphs
 
 # read in lipid(s) to be modeled
-lipid = Lipid('toy_models/model1.pdb', 5, 'POV', rtfs['POPC'], graphs['POPC'])
+lipid = Lipid('toy_models/model1.pdb', 5, rtfs['POPC'], graphs['POPC'], restype='POV')
+print(graphs)
 lipid.model()

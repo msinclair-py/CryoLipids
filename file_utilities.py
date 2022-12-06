@@ -144,7 +144,7 @@ class rtfParser:
     @staticmethod
     def generate_graph(rtf_dict: Dict[str,float]) -> Dict[str, Set[str]]:
         graph = {}
-        for key in rtfs['POPE']['bond'].keys():
+        for key in rtf_dict['bond'].keys():
             a1, a2 = key.split('-')
             try:
                 graph[a1].add(a2)
