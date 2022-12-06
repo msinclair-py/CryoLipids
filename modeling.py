@@ -19,7 +19,14 @@ class Lipid(PDB):
 
 
     def model(self):
-        pass
+        # identify unmodelled heavy atoms
+        
+        # prioritize modeling order
+
+        # model atoms one at a time
+
+        # this method will perform first-pass modeling only
+        return 1
 
 
     @staticmethod
