@@ -1,5 +1,8 @@
 #!/usr/bin/env python
+import networkx as nx
 import os
+from itertools import combinations
+from networkx.algorithms.approximation import clique
 from typing import Dict, List, Union, Set
 
 class PDB:
@@ -150,10 +153,27 @@ class MolecularGraph:
     
     def __init__(self, rtf = Dict[str, float]):
         self._rtfs = rtf
+        self.graphs = {key: MolecularGraph.generate_graph(rtf[key]) for key in rtf.keys()}
 
-
+    
     @staticmethod
-    def generate_graph(rtf_dict: Dict[str,float]) -> Dict[str, Set[str]]:
+    def generate_graph(rtf_dict: Dict[str,float]) -> nx.Graph():
+        G = nx.Graph()
+        for key in rtf_dict['bond'].keys():
+            if 'H' not in key:
+                a1, a2 = key.split('-')
+                G.add_edge(a1, a2)
+        
+        return G
+
+
+    def function():
+        return 1
+
+
+    ### OBSOLETE ###
+    @staticmethod
+    def generate_graph_OLD(rtf_dict: Dict[str,float]) -> Dict[str, Set[str]]:
         graph = {}
         for key in rtf_dict['bond'].keys():
             a1, a2 = key.split('-')
@@ -161,10 +181,11 @@ class MolecularGraph:
                 graph[a1].add(a2)
             except KeyError:
                 graph.update({a1: {a2}})
-
+        
         return graph
 
 
+    ### OBSOLETE ###
     @staticmethod
     def generate_edges(graph: Dict[str, Set[str]]) -> List[str]:
         edges = []
@@ -177,6 +198,7 @@ class MolecularGraph:
         return edges
 
 
+    ### OBSOLETE ###
     @property
     def connectivity_graphs(self) -> Dict[str, Dict[str, str]]:
         edges = {}
@@ -187,9 +209,63 @@ class MolecularGraph:
         self._edges = edges
 
 
-    @staticmethod
-    def adjacency(edgelist: Dict[str, List[Set[str]]]) -> Dict[str, Dict[str, str]]:
+    ### OBSOLETE ###
+    @property
+    def adjacency_list(self) -> Dict[str, Dict[str, str]]:
         adj = {key: dict() for key in self._edges}
         for lip in adj.keys():
             edgelist = self._edges[lip]
+            for (e1, e2) in edgelist:
+                if any(['H' in e1, 'H' in e2]):
+                    continue
+
+                try:
+                    adj[lip][e1] = adj[lip][e1] + [e2]
+                except KeyError:
+                    adj[lip][e1] = [e2]
+
+                try:
+                    adj[lip][e2] = adj[lip][e2] + [e1]
+                except KeyError:
+                    adj[lip][e2] = [e1]
+
         return adj
+
+    
+    ### OBSOLETE ###
+    @staticmethod
+    def has_path(graph: Dict[str, List[str]], src: str, 
+                   dst: str, visited: Set[str] = set()) -> None:
+
+        if src in visited:
+            return False
+        else:
+            visited.add(src) # critical for not getting trapped
+                             # in infinite recursion
+        if src == dst:
+            return True
+
+        for neighbor in graph[src]:
+            if has_path(graph, neighbor, dst, visited):
+                return True
+
+        return False
+
+
+    ### OBSOLETE ###
+    @staticmethod
+    def depth_first_traversal(all_nodes: Set[str], 
+                               adj_list: Dict[str, List[str]]) -> List[List[str]]:
+        paths = []
+        for s, d in combinations(all_nodes, 2):
+            path.append(has_path(adj_list, s, d))
+
+        return paths
+
+
+    ### OBSOLETE ###
+    def identify_subgraphs(all_nodes: Set[str]):
+        potential = {N: combinations(all_nodes, N) for N in range(len(all_nodes))}
+        for path in potential:
+            dsf
+        return 0
