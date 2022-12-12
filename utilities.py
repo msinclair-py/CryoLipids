@@ -141,6 +141,17 @@ class rtfParser:
         return {'bond': bonds, 'angle': angles, 'dihedral': dihedrals, 'improper': impropers}
 
 
+class MolecularGraph:
+    """
+    Collection of undirected graph methods for graph construction and traversal of atomic 
+    information in rtf files. Intended for performing path matching and fragment library
+    generation.
+    """
+    
+    def __init__(self, rtf = Dict[str, float]):
+        self._rtfs = rtf
+
+
     @staticmethod
     def generate_graph(rtf_dict: Dict[str,float]) -> Dict[str, Set[str]]:
         graph = {}
@@ -173,4 +184,12 @@ class rtfParser:
             graph = self.generate_graph(self._rtfs[lipid])
             edges.update({lipid: self.generate_edges(graph)})
 
-        return edges
+        self._edges = edges
+
+
+    @staticmethod
+    def adjacency(edgelist: Dict[str, List[Set[str]]]) -> Dict[str, Dict[str, str]]:
+        adj = {key: dict() for key in self._edges}
+        for lip in adj.keys():
+            edgelist = self._edges[lip]
+        return adj

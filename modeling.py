@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from typing import Dict, List
-from file_utilities import PDB
+from utilities import PDB
 import numpy as np
 
 class Lipid(PDB):

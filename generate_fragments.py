@@ -12,6 +12,7 @@ lipids = ['POPE', 'POPC', 'POPG', 'POPS'] #, 'POPI24', 'PVCL2']
 parse = rtfParser()
 rtfs = parse.get_rtfs
 graphs = parse.connectivity_graphs
+adj_list = parse.adjacency
 
 for lipid in lipids:
     # get coords from lipids/*pdb
