@@ -4,11 +4,12 @@ channels:
   - conda-forge
 dependencies:
   - bzip2=1.0.8
-  - ca-certificates=2022.12.7
+  - ca-certificates=2022.10.11
   - libffi=3.4.2
   - libsqlite=3.40.0
   - libzlib=1.2.13
   - ncurses=6.3
+  - networkx=2.7.1
   - openssl=3.0.7
   - pip=22.3.1
   - python=3.11.0
