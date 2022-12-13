@@ -12,12 +12,10 @@ rtfs = parse.get_rtfs
 
 # generate molecular graph object
 graph = MolecularGraph(rtfs)
-graph_dict = graph.graphs
-print(graph_dict['POPE'].edges)
-#print(graph.adjacency())
-#graph.connectivity_graphs
-#adj_list = graph.adjacency_list
+graph.connectivity_graphs
+adj_list = graph.adjacency_list
 
+dummy = MolecularGraph.matt_algorithm(adj_list['POPE'], 15)
 # read in lipid(s) to be modeled
 #lipid = Lipid('toy_models/model1.pdb', 5, rtfs['POPC'], graph._edges['POPC'], restype='POV')
 #lipid.model()

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
-import networkx as nx
 import os
 from itertools import combinations
-from networkx.algorithms.approximation import clique
 from typing import Dict, List, Union, Set
 
 class PDB:
@@ -153,27 +151,11 @@ class MolecularGraph:
     
     def __init__(self, rtf = Dict[str, float]):
         self._rtfs = rtf
-        self.graphs = {key: MolecularGraph.generate_graph(rtf[key]) for key in rtf.keys()}
+        #self.graphs = {key: MolecularGraph.generate_graph(rtf[key]) for key in rtf.keys()}
 
     
     @staticmethod
-    def generate_graph(rtf_dict: Dict[str,float]) -> nx.Graph():
-        G = nx.Graph()
-        for key in rtf_dict['bond'].keys():
-            if 'H' not in key:
-                a1, a2 = key.split('-')
-                G.add_edge(a1, a2)
-        
-        return G
-
-
-    def function():
-        return 1
-
-
-    ### OBSOLETE ###
-    @staticmethod
-    def generate_graph_OLD(rtf_dict: Dict[str,float]) -> Dict[str, Set[str]]:
+    def generate_graph(rtf_dict: Dict[str,float]) -> Dict[str, Set[str]]:
         graph = {}
         for key in rtf_dict['bond'].keys():
             a1, a2 = key.split('-')
@@ -185,7 +167,6 @@ class MolecularGraph:
         return graph
 
 
-    ### OBSOLETE ###
     @staticmethod
     def generate_edges(graph: Dict[str, Set[str]]) -> List[str]:
         edges = []
@@ -198,7 +179,6 @@ class MolecularGraph:
         return edges
 
 
-    ### OBSOLETE ###
     @property
     def connectivity_graphs(self) -> Dict[str, Dict[str, str]]:
         edges = {}
@@ -209,7 +189,6 @@ class MolecularGraph:
         self._edges = edges
 
 
-    ### OBSOLETE ###
     @property
     def adjacency_list(self) -> Dict[str, Dict[str, str]]:
         adj = {key: dict() for key in self._edges}
@@ -231,6 +210,39 @@ class MolecularGraph:
 
         return adj
 
+   
+    @staticmethod
+    def matt_algorithm(adj_list: Dict[str, List[str]], N: int) -> Dict[str, List[str]]:
+        all_nodes = set(adj_list.keys())
+        fragments = dict()
+        for k in range(3, N):
+            k_combinations = combinations(all_nodes, k)
+            for combination in k_combinations:
+                if MolecularGraph.path_exists(adj_list, combination):
+                    try:
+                        fragments[k].append(combination)
+                    except KeyError:
+                        fragments[k] = list(combination)
+
+        return fragments
+
+
+    @staticmethod
+    def path_exists(adjacency: Dict[str, List[str]], path: List[str]) -> bool:
+        neighbors = []
+        for element in path:
+            for val in adjacency[element]:
+                if val in path:
+                    neighbor = {element, val}
+                    if neighbor not in neighbors:
+                        neighbors.append(neighbor)
+
+        if len(neighbors) >= len(path) - 1: # can be used to detect rings if there
+            print(neighbors, path)          # are `len(path)` number of connections
+            return True                     # in neighbors
+
+        return False
+
     
     ### OBSOLETE ###
     @staticmethod
@@ -244,9 +256,9 @@ class MolecularGraph:
                              # in infinite recursion
         if src == dst:
             return True
-
+       
         for neighbor in graph[src]:
-            if has_path(graph, neighbor, dst, visited):
+            if MolecularGraph.has_path(graph, neighbor, dst, visited):
                 return True
 
         return False
@@ -258,7 +270,8 @@ class MolecularGraph:
                                adj_list: Dict[str, List[str]]) -> List[List[str]]:
         paths = []
         for s, d in combinations(all_nodes, 2):
-            path.append(has_path(adj_list, s, d))
+            path = MolecularGraph.has_path(adj_list, s, d)
+            print(path)
 
         return paths
 
