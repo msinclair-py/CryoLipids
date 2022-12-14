@@ -15,7 +15,8 @@ graph = MolecularGraph(rtfs)
 graph.connectivity_graphs
 adj_list = graph.adjacency_list
 
-dummy = MolecularGraph.matt_algorithm(adj_list['POPE'], 15)
+dummy = MolecularGraph.matt_algorithm(adj_list['POPE'], 6)
+print(dummy)
 # read in lipid(s) to be modeled
 #lipid = Lipid('toy_models/model1.pdb', 5, rtfs['POPC'], graph._edges['POPC'], restype='POV')
 #lipid.model()
