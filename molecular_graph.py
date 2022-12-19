@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from copy import deepcopy
 from itertools import combinations
 from typing import Dict, List, Set
 
@@ -35,7 +36,7 @@ class MolecularGraph:
         Returns atoms where branching occurs in the longest continuous path
         through each given lipid molecule.
         """
-        lip = {'C2': ['C3', 'O31'] + [f'C{n}' for n in range(1, 17)],
+        lip = {'C2': ['C3', 'O31'] + [f'C3{n}' for n in range(1, 17)],
                'P': ['O13', 'O14'],
                'C21': ['O22'],
                'C31': ['O32']}
@@ -70,27 +71,43 @@ class MolecularGraph:
         Take fragments from longest pathway in structure and divergent paths (sn-2 tail, phosphate
         oxygens, etc.) to generate full fragment library.
         """
+        ###### NOTE: This should be refactored for efficiency
         branch_map = self.branches
         for atom, frags in branch_map.items():
-            for path in fragments.values():
+            matches = []
+            for p in fragments.values():
+                for v in p:
+                    if atom in v:
+                        matches.append(v)
 
-                match atom:
-                    case 'C3':
-                        new_paths = [[atom] + path.append(frags[:n]) for n in range(1, len(frags))]
-                    case 'P' | 'N':
-                        new_paths = [[atom, frag] for frag in frags] + [[atom] + frags]
-                    case _:
-                        new_paths = [atom, frags]
+            match atom:
+                case 'C2':
+                    new_paths = [frags[:n] for n in range(1, len(frags) + 1)]
+                case 'P' | 'N':
+                    new_paths = [[frag] for frag in frags] + [frags]
+                case _:
+                    new_paths = [frags] if isinstance(frags[0], str) else frags
+           
+            new_frags = dict()
+            for m in matches: 
+                for p in new_paths:
+                    temp = deepcopy(m)
+                    temp.extend(p)
+                    
+                    try:
+                        if temp not in new_frags[len(temp)]:
+                            new_frags[len(temp)].append(temp)
+                    except KeyError:
+                        new_frags[len(temp)] = [temp]
+            
+            for length, path in new_frags.items():
+                for p in path:
+                    try:
+                        fragments[length].append(p)
+                    except KeyError:
+                        fragments[length] = p
 
-                print(atom, path)
-                if atom in path:
-                    test = {len(p): path + p for p in new_paths}
-                    print(test)
-                    # fix below (rewrite??)
-                    #new = {len(p): p for p in pth [for pth in path.append(branch_map[atom])]}
-
-        # find fragments with noted atom (`key`)
-        # add atoms and add to appropriate portion of `fragments`
+        print(fragments[47])
         return fragments
 
 
@@ -103,7 +120,7 @@ class MolecularGraph:
         fragments = dict()
         for n in range(3, len(longest_path)):
             fragments[n] = self.sliding_window(longest_path, n)
-        
+       
         return self.complete_library(fragments)
 
 
