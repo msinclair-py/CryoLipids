@@ -3,7 +3,9 @@ import json
 from utilities import rtfParser
 from molecular_graph import MolecularGraph
 
-lipids = ['POPE'] #, 'POPC', 'POPG', 'POPS'] #, 'POPI24', 'PVCL2']
+# support for PI and Cardiolipin is pending as these are nontrivial
+# to model even with our novel approach
+lipids = ['POPE', 'POPC', 'POPG', 'POPS'] #, 'POPI24', 'PVCL2']
 
 # get rtf for edge graph
 parse = rtfParser()
@@ -25,9 +27,4 @@ for lipid in lipids:
     # this thoughtfully and obtain a fragment library in a fraction
     # of the time
     fragments = graph.fragment_lipid(dfs)
-    
-    # generate persistence diagrams for each fragment
-    diagrams = graph.get_diagrams(fragments)
-
-    # write out diagrams to file
-    #json.dump(diagrams, open(f'fragment_library/{lipid}.json', 'w'))
+    json.dump(fragments, open(f'fragment_library/{lipid}.json', 'w'))

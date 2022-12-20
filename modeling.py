@@ -76,3 +76,41 @@ class Lipid(PDB):
 
     def rotate_improper():
         pass
+
+
+class Template(PDB):
+    """
+    Child of `PDB` class used to access lipid coordinates of example
+    rtf lipids and tie coordinate data to connected fragment data.
+    """
+    def __init__(self, pdbfile: str, restype: str):
+        super().__init__(pdbfile, resname=restype)
+        self.atoms = self.contents
+        self.filter_heavy_atoms()
+
+    
+    def filter_heavy_atoms(self) -> None:
+        heavy = []
+        for atom in self.atoms:
+            if 'H' not in atom[2].strip():
+                heavy.append(atom)
+        
+        self.heavy = Template.process(heavy)
+
+
+    @staticmethod
+    def process(atoms: List[str]) -> Dict[str, np.ndarray]:
+        processed = dict()
+        for atom in atoms:
+            coord = np.array([i.strip() for i in atom[6:9]], dtype=np.float64)
+            processed[atom[2].strip()] = coord
+
+        return processed
+
+
+    def atomic_coordinates(self, names: List[str]) -> np.ndarray:
+        coords = []
+        for name in names:
+            coords.append(self.heavy[name])
+
+        return np.array(coords, dtype=np.float64)

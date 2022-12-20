@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 from copy import deepcopy
 from itertools import combinations
+import numpy as np
+import persim
+import ripser
 from typing import Dict, List, Set
 
 class MolecularGraph:
@@ -194,9 +197,22 @@ class MolecularGraph:
         self._graph = graph
         return graph
 
-    
-    def get_diagrams(fragments):
-        return diagrams
+
+    def get_coords(self, fragment: List[str]) -> np.ndarray:
+        coords = np.array([])
+        for line in self._rtfs[self._lipid]['bond']:
+            print(line)
+        return coords
+
+
+    @staticmethod
+    def get_diagram(data: np.ndarray) -> List[np.ndarray]:
+        """
+        Using algebraic topology, obtain a persistence diagram
+        of each fragment for comparison with experimentally-derived
+        lipid fragments.
+        """
+        return ripser.ripser(data)['dgms']
 
 
     ### OBSOLETE ###
