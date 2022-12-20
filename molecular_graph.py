@@ -89,7 +89,7 @@ class MolecularGraph:
                     new_paths = [frags] if isinstance(frags[0], str) else frags
            
             new_frags = dict()
-            for m in matches: 
+            for m in matches:
                 for p in new_paths:
                     temp = deepcopy(m)
                     temp.extend(p)
@@ -105,9 +105,8 @@ class MolecularGraph:
                     try:
                         fragments[length].append(p)
                     except KeyError:
-                        fragments[length] = p
+                        fragments[length] = [p]
 
-        print(fragments[47])
         return fragments
 
 
@@ -120,7 +119,7 @@ class MolecularGraph:
         fragments = dict()
         for n in range(3, len(longest_path)):
             fragments[n] = self.sliding_window(longest_path, n)
-       
+        
         return self.complete_library(fragments)
 
 
@@ -195,6 +194,10 @@ class MolecularGraph:
         self._graph = graph
         return graph
 
+    
+    def get_diagrams(fragments):
+        return diagrams
+
 
     ### OBSOLETE ###
     @property
@@ -216,7 +219,7 @@ class MolecularGraph:
 
         return adj
 
-   
+    ### OBSOLETE ### BRUTE FORCE CITY
     @staticmethod
     def matt_algorithm(adj_list: Dict[str, List[str]], N: int) -> Dict[str, List[str]]:
         all_nodes = set(adj_list.keys())

@@ -15,12 +15,19 @@ for lipid in lipids:
     graph = MolecularGraph(rtfs, lipid)
     G = graph.connectivity_graphs
     
+    # using depth-first search, identify longest chain in molecule
     dfs = graph.longest_path
     print(f'Longest path identified:\n{"->".join(dfs)}')
     
+    # from longest path, we can obtain a full library of fragments
+    # of size [3, N] inclusive. this is nontrivial and is in fact
+    # O(N*k^2) but exploiting lipid topology allows us to approach
+    # this thoughtfully and obtain a fragment library in a fraction
+    # of the time
     fragments = graph.fragment_lipid(dfs)
-    #print(fragments[15])
+    
+    # generate persistence diagrams for each fragment
+    diagrams = graph.get_diagrams(fragments)
 
-
-    #fragments = graph.fragment_lipid
-    #json.dump(fragments, open(f'fragment_library/{lipid}.json', 'w'))
+    # write out diagrams to file
+    #json.dump(diagrams, open(f'fragment_library/{lipid}.json', 'w'))
