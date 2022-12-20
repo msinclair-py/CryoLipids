@@ -43,12 +43,17 @@ class MolecularGraph:
                'P': ['O13', 'O14'],
                'C21': ['O22'],
                'C31': ['O32']}
+        
+        pc, pg, ps = [deepcopy(lip) for _ in range(3)]
+        pc.update({'N': ['C13', 'C14']})
+        pg.update({'C12': ['OC2']})
+        ps.update({'C12': ['N']})
 
         branch_residues = {
                 'POPE': lip,
-                'POPC': lip.copy().update({'N': ['C13', 'C14']}),
-                'POPG': lip.copy().update({'C12': ['OC2']}),
-                'POPS': lip.copy().update({'C12': ['N']}),
+                'POPC': pc,
+                'POPG': pg,
+                'POPS': ps,
                 'POPA': lip
                 }
 
@@ -76,6 +81,7 @@ class MolecularGraph:
         """
         ###### NOTE: This should be refactored for efficiency
         branch_map = self.branches
+        print(branch_map)
         for atom, frags in branch_map.items():
             matches = []
             for p in fragments.values():
@@ -126,8 +132,8 @@ class MolecularGraph:
         return self.complete_library(fragments)
 
 
-    def dfs(self, graph: Dict[str, Set[str]], node: str,
-            path: List[str] = None, visited: Set[str] = set()) -> List[str]:
+    def dfs(self, node: str, path: List[str] = None, 
+            visited: Set[str] = set()) -> List[str]:
         """
         Recursive depth-first search algorithm. Returns list of all identified
         paths in `graph`.
@@ -136,11 +142,11 @@ class MolecularGraph:
         visited.add(node)
 
         paths = []
-        for t in graph[node]:
-            if t not in visited:
-                t_path = path + [t]
-                paths.append(t_path)
-                paths.extend(self.dfs(graph, t, t_path, visited))
+        for tail in self._graph[node]:
+            if tail not in visited:
+                tail_path = path + [tail]
+                paths.append(tail_path)
+                paths.extend(self.dfs(self._graph, tail, tail_path, visited))
 
         return paths
 
@@ -150,7 +156,7 @@ class MolecularGraph:
         """
         Performs dfs and then returns the longest pathway.
         """
-        paths = self.dfs(self._graph, self.root)
+        paths = self.dfs(self.root)
         longest = tuple()
         for path in paths:
             if len(path) > len(longest):
@@ -213,98 +219,3 @@ class MolecularGraph:
         lipid fragments.
         """
         return ripser.ripser(data)['dgms']
-
-
-    ### OBSOLETE ###
-    @property
-    def adjacency_list(self) -> Dict[str, Dict[str, str]]:
-        adj = {}
-        for (e1, e2) in self._edges:
-            if any(['H' in e1, 'H' in e2]):
-                continue
-
-            try:
-                adj[e1] = adj[e1] + [e2]
-            except KeyError:
-                adj[e1] = [e2]
-
-            try:
-                adj[e2] = adj[e2] + [e1]
-            except KeyError:
-                adj[e2] = [e1]
-
-        return adj
-
-    ### OBSOLETE ### BRUTE FORCE CITY
-    @staticmethod
-    def matt_algorithm(adj_list: Dict[str, List[str]], N: int) -> Dict[str, List[str]]:
-        all_nodes = set(adj_list.keys())
-        fragments = dict()
-        for k in range(3, N):
-            print(f'\nGenerating fragments of length {k}!')
-            k_combinations = combinations(all_nodes, k)
-            for combination in k_combinations:
-                if MolecularGraph.path_exists(adj_list, combination):
-                    try:
-                        fragments[k].append(combination)
-                    except KeyError:
-                        fragments[k] = list(combination)
-
-        return fragments
-
-
-    @staticmethod
-    def path_exists(adjacency: Dict[str, List[str]], path: List[str]) -> bool:
-        neighbors = []
-        for element in path:
-            for val in adjacency[element]:
-                if val in path:
-                    neighbor = {element, val}
-                    if neighbor not in neighbors:
-                        neighbors.append(neighbor)
-
-        if len(neighbors) >= len(path) - 1: # can be used to detect rings if there
-            #print(neighbors, path)          # are `len(path)` number of connections
-            return True                     # in neighbors
-
-        return False
-
-    
-    ### OBSOLETE ###
-    @staticmethod
-    def has_path(graph: Dict[str, List[str]], src: str, 
-                   dst: str, visited: Set[str] = set()) -> None:
-
-        if src in visited:
-            return False
-        else:
-            visited.add(src) # critical for not getting trapped
-                             # in infinite recursion
-        if src == dst:
-            return True
-       
-        for neighbor in graph[src]:
-            if MolecularGraph.has_path(graph, neighbor, dst, visited):
-                return True
-
-        return False
-
-
-    ### OBSOLETE ###
-    @staticmethod
-    def depth_first_traversal(all_nodes: Set[str], 
-                               adj_list: Dict[str, List[str]]) -> List[List[str]]:
-        paths = []
-        for s, d in combinations(all_nodes, 2):
-            path = MolecularGraph.has_path(adj_list, s, d)
-            print(path)
-
-        return paths
-
-
-    ### OBSOLETE ###
-    def identify_subgraphs(all_nodes: Set[str]):
-        potential = {N: combinations(all_nodes, N) for N in range(len(all_nodes))}
-        for path in potential:
-            dsf
-        return 0

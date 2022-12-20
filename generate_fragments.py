@@ -3,6 +3,10 @@ import json
 from utilities import rtfParser
 from molecular_graph import MolecularGraph
 
+# OUTSTANDING ISSUE: since we start from fragments of size 3 there are many
+#   fragments missing from any auxiliary paths including the sn2 tail. This
+#   is likely trivial but should still be addressed in future update
+
 # support for PI and Cardiolipin is pending as these are nontrivial
 # to model even with our novel approach
 lipids = ['POPE', 'POPC', 'POPG', 'POPS'] #, 'POPI24', 'PVCL2']
