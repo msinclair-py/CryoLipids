@@ -81,7 +81,6 @@ class MolecularGraph:
         """
         ###### NOTE: This should be refactored for efficiency
         branch_map = self.branches
-        print(branch_map)
         for atom, frags in branch_map.items():
             matches = []
             for p in fragments.values():
@@ -146,7 +145,7 @@ class MolecularGraph:
             if tail not in visited:
                 tail_path = path + [tail]
                 paths.append(tail_path)
-                paths.extend(self.dfs(self._graph, tail, tail_path, visited))
+                paths.extend(self.dfs(tail, tail_path, visited))
 
         return paths
 
@@ -156,7 +155,7 @@ class MolecularGraph:
         """
         Performs dfs and then returns the longest pathway.
         """
-        paths = self.dfs(self.root)
+        paths = self.dfs(self.root, visited=set())
         longest = tuple()
         for path in paths:
             if len(path) > len(longest):

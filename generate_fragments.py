@@ -16,14 +16,17 @@ parse = rtfParser()
 rtfs = parse.get_rtfs
 
 for lipid in lipids:
-    print(f'Fragmenting {lipid}!')
+    print('\n---------------------')
+    print(f'| Fragmenting {lipid}! |')
+    print('---------------------')
+
     # generate adjacency lists
     graph = MolecularGraph(rtfs, lipid)
     G = graph.connectivity_graphs
-    
+
     # using depth-first search, identify longest chain in molecule
     dfs = graph.longest_path
-    print(f'Longest path identified:\n{"->".join(dfs)}')
+    print(f'\nLongest path identified:\n{"->".join(dfs)}')
     
     # from longest path, we can obtain a full library of fragments
     # of size [3, N] inclusive. this is nontrivial and is in fact
@@ -31,4 +34,8 @@ for lipid in lipids:
     # this thoughtfully and obtain a fragment library in a fraction
     # of the time
     fragments = graph.fragment_lipid(dfs)
+    print('\nFragments found:')
+    for key, vals in fragments.items():
+        print(f'Size {key}: {len(vals)}')
+
     json.dump(fragments, open(f'fragment_library/{lipid}.json', 'w'))
