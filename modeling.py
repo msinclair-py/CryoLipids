@@ -10,7 +10,8 @@ class Lipid(PDB):
     """
     def __init__(self, pdbfile: str, resid: int, 
                     ic_table: Dict[str, Dict[str, float]],
-                    graph: Dict[str, Dict[str, str]], restype: str = 'POV'):
+                    graph: Dict[str, Dict[str, str]], 
+                    current_restype: str = 'POV'):
 
         super().__init__(pdbfile, [resid], resname=restype)
         self.ic_table = ic_table
