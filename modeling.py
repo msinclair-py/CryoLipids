@@ -1,7 +1,7 @@
 #!/usr/bin/env python
+import numpy as np
 from typing import Dict, List
 from utilities import PDB
-import numpy as np
 
 class Lipid(PDB):
     """
@@ -10,15 +10,13 @@ class Lipid(PDB):
     """
     def __init__(self, pdbfile: str, resid: int, 
                     ic_table: Dict[str, Dict[str, float]],
-                    graph: Dict[str, Dict[str, str]], 
                     current_restype: str = 'POV'):
 
-        super().__init__(pdbfile, [resid], resname=restype)
+        super().__init__(pdbfile, [resid], resname=current_restype)
         self.ic_table = ic_table
-        self.graph = graph
         self.pdb_contents = self.contents
 
-
+    
     def model(self):
         # identify unmodelled heavy atoms
         
@@ -110,8 +108,4 @@ class Template(PDB):
 
 
     def atomic_coordinates(self, names: List[str]) -> np.ndarray:
-        coords = []
-        for name in names:
-            coords.append(self.heavy[name])
-
-        return np.array(coords, dtype=np.float64)
+        return  np.array([self.heavy[name] for name in names], dtype=np.float64)

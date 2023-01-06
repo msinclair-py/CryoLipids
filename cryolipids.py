@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 import argparse
 import json
+import MDAnalysis as mda
+from MDAnalysis.analysis import align
+from modeling import Lipid, Template
+from molecular_graph import MolecularGraph, PersistentHomology
 from utilities import PDB, rtfParser
-from modeling import Lipid
-from molecular_graph import MolecularGraph
 
 parser = argparse.ArgumentParser(description = '')
 
@@ -23,36 +25,61 @@ structure = args.structure
 resids = args.resids
 lipid = args.lipid
 
+# DELETE THIS LATER
+structure = 'toy_models/model1.pdb'
+
 # read in cryo em model file and process
 pdb = PDB('misc/bmrcd.pdb', [5])
-print(pdb.contents)
 pdb.write_to_pdb_file(pdb.contents)
 
 # read in rtf files
 parse = rtfParser()
 rtfs = parse.get_rtfs
 
+# NOTE: this will need to be reworked in order to be done
+#   on the lipids from the above PDB() class structure
+
 # read in lipid(s) to be modeled
-molecule = Lipid('toy_models/model1.pdb', 
+molecule = Lipid(structure, 
                 5, 
                 rtfs['POPC'], 
-                graph._edges['POPC'], 
                 current_restype='POV')
 
-# generate persistence diagrams for each `lipid` fragment of size `k`
-rtf_lipid = 
-k = 
+modeled_atoms = molecule.contents
 
-fragments = json.load('fragment_library/{lipid}.json')
+# generate persistence diagrams for each `lipid` fragment of size `k`
+rtf_lipid = Template(f'lipids_from_rtf/{lipid}.pdb', lipid)
+k = str(len(modeled_atoms))
+
+fragments = json.load(open(f'fragment_library/{lipid}.json', 'r'))
 diagrams = dict()
-for frags in fragments[k]:
-    for frag in frags:
-        coords = rtf_lipid.atomic_coordinates(frag)
-        diagram = graph.get_diagram(coords)
-        print(diagram)
+for i, frag in enumerate(fragments[k]):
+    coords = rtf_lipid.atomic_coordinates(frag)
+    diagram = MolecularGraph.get_diagram(coords)
+    print(diagram)
+
+    diagrams[i] = diagram
 
 # identify fragment
+PH = PersistenceHomology(modeled_atoms, diagrams)
+fragment_index = PH.identify
+atom_names = fragments[k][fragment_index]
 
+# align proper atoms to fragment
+good_lipid = mda.Universe(rtf_lipid.filename)
+good_CoM = good_lipid.select_atoms(atom_names).center_of_mass()
+compare = good_lipid.select_atoms(atom_names).positions - good_CoM
 
-# model
+ref = mda.Universe(structure)
+ref_CoM = ref.select_atoms('all').center_of_mass()
+reference = ref.select_atoms('all').positions - ref_CoM
+
+rotation_matrix, _ = align.rotation_matrix(compare, reference)
+good_lipid.atoms.translate(-good_CoM)
+good_lipid.atoms.rotate(rotation_matrix)
+good_lipid.atoms.translate(ref_CoM)
+
+# check for protein clashes
+
+# adjust structure accordingly
 

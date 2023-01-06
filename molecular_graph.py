@@ -210,6 +210,19 @@ class MolecularGraph:
         return coords
 
 
+class PersistentHomology:
+    """
+    Class for obtaining persistence diagrams and performing Wasserstein
+    distance analysis on one point cloud versus a set of point clouds.
+    Identifies the best possible match.
+    """
+
+    def __init__(self, cloud: np.ndarray, cloud_library: Dict[str, np.ndarray]):
+        self.cloud = PersistentHomology.get_diagram(cloud)
+        self.diagram_library = {key: PersistentHomology.get_diagram(val) 
+                                for key, val in cloud_library.items()}
+
+
     @staticmethod
     def get_diagram(data: np.ndarray) -> List[np.ndarray]:
         """
@@ -218,3 +231,13 @@ class MolecularGraph:
         lipid fragments.
         """
         return ripser.ripser(data)['dgms']
+
+
+    def identify(self) -> int:
+        lowest = [0, 1e6]
+        for idx, diagram in self.diagram_library.items():
+            distance = persim.wasserstein(self.cloud, diagram)
+            if distance < lowest[1]:
+                lowest = [idx, distance]
+
+        return lowest[0]
