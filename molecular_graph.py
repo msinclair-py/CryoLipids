@@ -217,10 +217,10 @@ class PersistentHomology:
     Identifies the best possible match.
     """
 
-    def __init__(self, cloud: np.ndarray, cloud_library: Dict[str, np.ndarray]):
-        self.cloud = PersistentHomology.get_diagram(cloud)
-        self.diagram_library = {key: PersistentHomology.get_diagram(val) 
-                                for key, val in cloud_library.items()}
+    def __init__(self, cloud: List[List[float]], 
+                    cloud_library: Dict[str, np.ndarray]):
+        self.cloud = PersistentHomology.get_diagram(np.array(cloud))
+        self.cloud_library = cloud_library
 
 
     @staticmethod
@@ -233,9 +233,11 @@ class PersistentHomology:
         return ripser.ripser(data)['dgms']
 
 
-    def identify(self) -> int:
+    @property
+    def best_fit(self) -> int:
         lowest = [0, 1e6]
-        for idx, diagram in self.diagram_library.items():
+        for idx, diagram in self.cloud_library.items():
+            print(f'{self.cloud}\n\n{diagram}')
             distance = persim.wasserstein(self.cloud, diagram)
             if distance < lowest[1]:
                 lowest = [idx, distance]

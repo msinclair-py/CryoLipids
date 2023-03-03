@@ -45,7 +45,7 @@ molecule = Lipid(structure,
                 rtfs['POPC'], 
                 current_restype='POV')
 
-modeled_atoms = molecule.contents
+modeled_atoms = molecule.extract_coordinates()
 
 # generate persistence diagrams for each `lipid` fragment of size `k`
 rtf_lipid = Template(f'lipids_from_rtf/{lipid}.pdb', lipid)
@@ -55,15 +55,16 @@ fragments = json.load(open(f'fragment_library/{lipid}.json', 'r'))
 diagrams = dict()
 for i, frag in enumerate(fragments[k]):
     coords = rtf_lipid.atomic_coordinates(frag)
-    diagram = MolecularGraph.get_diagram(coords)
-    print(diagram)
+    diagram = PersistentHomology.get_diagram(coords)
 
     diagrams[i] = diagram
 
 # identify fragment
-PH = PersistenceHomology(modeled_atoms, diagrams)
-fragment_index = PH.identify
+PH = PersistentHomology(modeled_atoms, diagrams)
+fragment_index = PH.best_fit
 atom_names = fragments[k][fragment_index]
+
+print(fragment_index, atom_names)
 
 # align proper atoms to fragment
 good_lipid = mda.Universe(rtf_lipid.filename)

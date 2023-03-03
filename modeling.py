@@ -12,11 +12,16 @@ class Lipid(PDB):
                     ic_table: Dict[str, Dict[str, float]],
                     current_restype: str = 'POV'):
 
-        super().__init__(pdbfile, [resid], resname=current_restype)
-        self.ic_table = ic_table
-        self.pdb_contents = self.contents
+       super().__init__(pdbfile, [resid], resname=current_restype)
+       self.ic_table = ic_table
+       self.pdb_contents = self.contents
 
     
+    def extract_coordinates(self) -> np.ndarray:
+        pdb_contents = np.asarray(self.contents)
+        return pdb_contents[:,6:9].astype(np.float64)
+
+
     def model(self):
         # identify unmodelled heavy atoms
         
