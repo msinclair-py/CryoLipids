@@ -21,9 +21,10 @@ numpy, etc). sklearn specifically will break the code if you install mdanalysis 
 scikit-tda. Additionally, in the future python 3.11 will presumably be in the main
 anaconda channel but due to mdanalysis being in conda-forge you will likely still need
 to include conda-forge as a channel for anaconda.
-`conda create -c conda-forge python=3.11 -n cryo`
-`conda activate cryo`
-`conda install mdanalysis`
-`pip install scikit-tda`
+
+```conda create -c conda-forge python=3.11 -n cryo
+conda activate cryo
+conda install mdanalysis
+pip install scikit-tda```
 
 ## Running CryoLipids
