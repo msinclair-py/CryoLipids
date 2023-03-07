@@ -61,10 +61,9 @@ for i, frag in enumerate(fragments[k]):
 
 # identify fragment
 PH = PersistentHomology(modeled_atoms, diagrams)
-fragment_index = PH.best_fit
+fragment_index, wasserstein_scores = PH.best_fit
 atom_names = fragments[k][fragment_index]
-
-print(fragment_index, atom_names)
+print(fragment_index, sorted(atom_names))
 
 # align proper atoms to fragment
 good_lipid = mda.Universe(rtf_lipid.filename)

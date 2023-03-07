@@ -4,7 +4,7 @@ from itertools import combinations
 import numpy as np
 import persim
 import ripser
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Tuple
 
 class MolecularGraph:
     """
@@ -234,12 +234,18 @@ class PersistentHomology:
 
 
     @property
-    def best_fit(self) -> int:
-        lowest = [0, 1e6]
-        for idx, diagram in self.cloud_library.items():
-            print(f'{self.cloud}\n\n{diagram}')
-            distance = persim.wasserstein(self.cloud, diagram)
-            if distance < lowest[1]:
-                lowest = [idx, distance]
+    def best_fit(self, N_H0: int = 10) -> Tuple[int, np.ndarray]:
+        features = np.zeros((len(self.cloud_library), 2))
 
-        return lowest[0]
+        for idx, diagram in self.cloud_library.items():
+            h0 = persim.wasserstein(self.cloud[0], diagram[0])
+            h1 = persim.wasserstein(self.cloud[1], diagram[1])
+            features[idx] = np.array([h0, h1], ndmin=2)
+
+        # find 10 minimal h0s
+        idxs = np.argpartition(features[:,0], N_H0)[:10]
+
+        # find minimal h1
+        min_H1 = idxs[np.argmin(features[idxs, 1])]
+
+        return min_H1, features
