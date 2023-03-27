@@ -244,7 +244,7 @@ class PersistentHomology:
 
         # find 10 minimal h0s
         idxs = np.argpartition(features[:,0], N_H0)[:10]
-
+        print(features[idxs,:])
         # find minimal h1
         min_H1 = idxs[np.argmin(features[idxs, 1])]
 

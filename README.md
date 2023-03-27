@@ -28,3 +28,8 @@ conda install mdanalysis
 pip install scikit-tda```
 
 ## Running CryoLipids
+Simply running the main script `cryolipids.py` will perform all necessary operations. To
+clarify the required positional and keyword arguments you can enter into your terminal
+the following command:
+`python cryolipids.py -h`
+which will provide a succinct description of all user inputs.

@@ -47,6 +47,21 @@ molecule = Lipid(structure,
 
 modeled_atoms = molecule.extract_coordinates()
 
+##### WE NOW ASSUME YOU ARE CORRECTLY NAMED AND FORGET PH #####
+
+print(modeled_atoms)
+
+
+
+
+
+
+
+
+
+
+"""
+
 # generate persistence diagrams for each `lipid` fragment of size `k`
 rtf_lipid = Template(f'lipids_from_rtf/{lipid}.pdb', lipid)
 k = str(len(modeled_atoms))
@@ -63,7 +78,7 @@ for i, frag in enumerate(fragments[k]):
 PH = PersistentHomology(modeled_atoms, diagrams)
 fragment_index, wasserstein_scores = PH.best_fit
 atom_names = fragments[k][fragment_index]
-print(fragment_index, sorted(atom_names))
+print(fragment_index, sorted(atom_names), len(atom_names))
 
 # align proper atoms to fragment
 good_lipid = mda.Universe(rtf_lipid.filename)
@@ -82,4 +97,4 @@ good_lipid.atoms.translate(ref_CoM)
 # check for protein clashes
 
 # adjust structure accordingly
-
+"""
