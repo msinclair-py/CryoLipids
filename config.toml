@@ -1,0 +1,8 @@
+[system]
+name = "misc/bmrcd.pdb"
+resids = [5]
+lipid = "POPC"
+
+[dynamics]
+enabled = true
+engine = "openmm"

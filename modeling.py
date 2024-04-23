@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import numpy as np
+from scipy.spatial.transform import Rotation
 from typing import Dict, List
 from utilities import PDB
 
@@ -15,7 +16,7 @@ class Lipid(PDB):
        super().__init__(pdbfile, [resid], resname=current_restype)
        self.ic_table = ic_table
        self.pdb_contents = self.contents
-
+       self.unmodeled = self.pdb_contents
     
     def extract_coordinates(self) -> np.ndarray:
         pdb_contents = np.asarray(self.contents)
@@ -23,14 +24,18 @@ class Lipid(PDB):
 
 
     def model(self):
-        # identify unmodelled heavy atoms
-        
+        # identify terminated sequences
+
         # prioritize modeling order
 
         # model atoms one at a time
 
         # this method will perform first-pass modeling only
         return 1
+
+
+    def _add_atom(self, atom_name: str) -> None:
+        pass
 
 
     @staticmethod
@@ -69,9 +74,13 @@ class Lipid(PDB):
         plane_normal = np.cross(v1, v2)
         return 90 - np.arccos(plane_normal @ v3) * 180 / np.pi
 
-    
-    def rotate_angle():
-        pass
+
+    @staticmethod
+    def rotate_angle(a: np.ndarray, b: np.ndarray,
+                     c: np.ndarray, angle: int) -> List[np.ndarray]:
+        rotation_matrix = Rotation.from_euler('', angle, degrees=True)
+        rotated_array = rotation_matrix.apply(array)
+        return rotated_array
 
 
     def rotate_dihedral():
@@ -80,6 +89,50 @@ class Lipid(PDB):
 
     def rotate_improper():
         pass
+    
+    @staticmethod
+    def staple_tail(v1, v2, arr):
+        """
+        Given 2 arrays of 2 points each, which define our two vectors,
+        generate the rotation matrix which aligns v2 onto v1 both in terms
+        of angle and translation using the Kabsch algorithm. Apply this
+        rotation onto the array `arr`.
+        """ 
+        rotmatrix = Rotation.align_vectors((v1[1] - v1[0]).reshape(1, 3), 
+                                           (v2[1] - v2[0]).reshape(1, 3))[0]
+        return rotmatrix.apply(arr)
+        
+    
+    def get_terminal_atoms(self):
+        """
+        Identify any incompleteness in lipid molecule. Should return
+        the terminal headgroup atom, and terminal tail atoms which are
+        where template lipids will be attached to complete.
+        """
+        highest_sn1 = [1, []]
+        highest_sn2 = [1, []]
+        
+        for atom in self.contents:
+            atom_name = atom[2].strip()
+            try:
+                atom_num = int(atom_name[2:])
+                if 'C2' in atom_name and atom_num > highest_sn1[0]:
+                    highest_sn1 = [atom_num, np.array([float(x.strip()) for x in atom[6:9]])]
+                elif 'C3' in atom_name and atom_num > highest_sn2[0]:
+                    highest_sn2 = [atom_num, np.array([float(x.strip()) for x in atom[6:9]])]
+            except ValueError:
+                continue
+        
+        sn1_dict = {highest_sn1[0]: highest_sn1[1]}
+        sn2_dict = {highest_sn2[0]: highest_sn2[1]}
+        return {'sn1': sn1_dict, 'sn2': sn2_dict}
+        
+    def get_coord(self, name):
+        for atom in self.contents:
+            if atom[2].strip() == name:
+                return np.array([float(x.strip()) for x in atom[6:9]])
+            
+        raise ValueError(f'Atom {name} not found in partial lipid!')
 
 
 class Template(PDB):
@@ -113,4 +166,19 @@ class Template(PDB):
 
 
     def atomic_coordinates(self, names: List[str]) -> np.ndarray:
-        return  np.array([self.heavy[name] for name in names], dtype=np.float64)
+        return np.array([self.heavy[name] for name in names], dtype=np.float64)
+    
+    def missing_atoms(self, last_atom: str) -> np.ndarray:
+        tail = last_atom[:2]
+        num = int(last_atom[2:])
+        all_atoms = [key for key in self.heavy.keys() if key[:2] == tail]
+        
+        remaining = []
+        for atom in all_atoms:
+            try:
+                if int(atom[2:]) > num:
+                    remaining.append(atom)
+            except ValueError:
+                continue
+
+        return remaining, self.atomic_coordinates(remaining)
