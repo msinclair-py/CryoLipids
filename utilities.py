@@ -30,8 +30,8 @@ class PDB:
                      'atomid':   [6,  11],
                      'atomname': [11, 17],
                      'resname':  [17, 21],
-                     'chain':    [21, 23],
-                     'resid':    [23, 26],
+                     'chain':    [21, 22],
+                     'resid':    [22, 26],
                      'x':        [26, 38],
                      'y':        [38, 46],
                      'z':        [46, 54],
@@ -43,10 +43,9 @@ class PDB:
         parsed = []
         for line in pdbcontents:
             if int(line[_r0:_r1].strip()) in resids or not resids[0]:
-                parsed.append([line[x:y] for x,y in _pdb_info.values()])
+                parsed.append([line[x:y].strip() for x, y in _pdb_info.values()])
 
         return parsed
-
 
     @property
     def contents(self) -> List[str]:
@@ -54,13 +53,18 @@ class PDB:
         lines = [line for line in lines if self.resname in line] 
         return PDB.parse_pdb(lines, self.resids)
     
-    
     @staticmethod
-    def format_line(line: Union[str, int, float]) -> str:
-        _formatting = ['<6', '<5', '<6', '<3', '<3', '<3',
-                      '<12', '<8', '<8', '<6', '<6']
-        newline = [f'{l:{f}}' for l, f in zip(line, _formatting)]
-        return f'{"".join(newline)}\n'
+    def format_line(line: List[Union[str, int, float]]) -> str:
+        new_line = f'{line[0]:<6}{line[1]:>5} '
+        
+        if len(line[2]) < 4:
+            new_line += f' {line[2]:<4}'
+        else:
+            new_line += f'{line[2]:<5}'
+            
+        new_line += f'{line[3]:<4}{line[4]}{line[5]:>4}    '
+        new_line += f'{float(line[6]):>8.3f}{float(line[7]):>8.3f}{float(line[8]):>8.3f}'
+        return f'{"".join(new_line)}\n'
 
 
     def write_to_pdb_file(self, contents: List[str]) -> None:

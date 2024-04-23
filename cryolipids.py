@@ -45,8 +45,14 @@ for (tail, terminus) in terminal_atoms.items():
         vector_comp = rtf_lipid.atomic_coordinates([cur, prev])
         new_tail_names, new_tail_coords = rtf_lipid.missing_atoms(cur)
         new_tail_coords = molecule.staple_tail(vector_ref, vector_comp, new_tail_coords)
-        # align new tails now to {0 0 1}/{0 0 -1}
-        # add coords + pdb info into existing info to complete pdb file
+        new_tail_vec = [new_tail_coords[-1, :], new_tail_coords[0, :]]
+        z = 1 # how do we decide 1 vs -1??
+        new_tail_coords = molecule.staple_tail(np.array([[0,0,0], [0,0,z]]), 
+                                               new_tail_vec, new_tail_coords)
+        
+        molecule.add_to_pdb(new_tail_names, new_tail_coords)
+        molecule.write_to_pdb_file(molecule.pdb_contents)
+        print(molecule.pdb_contents)
 
 modeled_atoms = molecule.extract_coordinates()
 #print(modeled_atoms)

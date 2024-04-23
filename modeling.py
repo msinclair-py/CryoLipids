@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from copy import deepcopy
 import numpy as np
 from scipy.spatial.transform import Rotation
 from typing import Dict, List
@@ -16,12 +17,25 @@ class Lipid(PDB):
        super().__init__(pdbfile, [resid], resname=current_restype)
        self.ic_table = ic_table
        self.pdb_contents = self.contents
-       self.unmodeled = self.pdb_contents
+       self.unmodeled = deepcopy(self.pdb_contents)
     
     def extract_coordinates(self) -> np.ndarray:
         pdb_contents = np.asarray(self.contents)
         return pdb_contents[:,6:9].astype(np.float64)
-
+    
+    def add_to_pdb(self, atom_names: List[str], coords: np.ndarray) -> None:
+        last_num = int(self.pdb_contents[-2][1])
+        chain = self.pdb_contents[-2][4].strip()
+        
+        lines = []
+        for name, coord in zip(atom_names, coords):
+            last_num += 1
+            line = ['ATOM', last_num, name, self.resname, chain, self.resids[0],
+                    *coord, 0.0, 0.0]
+            lines.append(line)
+            
+        self.pdb_contents += lines
+        
 
     def model(self):
         # identify terminated sequences
