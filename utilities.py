@@ -84,7 +84,6 @@ class rtfParser:
     def __init__(self, lipids: List[str] = ['POPE','POPC','POPG','POPS',
                                             'POPI24','CHL1','PVCL2']):
         self.lipids = lipids
-        
         self._rtfs = self.get_rtfs
 
 

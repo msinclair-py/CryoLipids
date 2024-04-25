@@ -1,6 +1,8 @@
 #!/usr/bin/env python
+from collision_detection import CollisionDetector
+from minimizer import VacuumSimulator, ImplicitSolventSimulator
 from modeling import Lipid
-from utilities import PDB
+from utilities import PDB, rtfParser
 import tomllib
 
 config = tomllib.load(open('config.toml','rb'))
@@ -13,21 +15,27 @@ structure = 'toy_models/model1.pdb'
 pdb = PDB('misc/bmrcd.pdb', [5])
 pdb.write_to_pdb_file(pdb.contents)
 
+# load rtf files
+rtfs = rtfParser()
+
 # read in lipid(s) to be modeled
-molecule = Lipid(structure, 
-                5, 
-                rtfs['POPC'], 
-                current_restype='POV')
+lipid = Lipid(structure, 
+              5, 
+              rtfs['POPC'], 
+              current_restype='POV')
 
-molecule.model()
+# model lipid
+lipid.model()
 
-# do minimization?
-
+# do vacuum minimization
+minimizer = VacuumSimulator()
 
 # check for protein conflict; octree?
-
+collision_detector = CollisionDetector(protein, lipid, method=0)
+collision_detector.query()
 
 # fix conflict
 
 
-# do minimization?
+# do implicit solvent minimization and relaxation
+minimizer = ImplicitSolventSimulator()
