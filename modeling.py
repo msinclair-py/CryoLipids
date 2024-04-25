@@ -38,19 +38,36 @@ class Lipid(PDB):
         
 
     def model(self):
-        # identify terminated sequences
+        terminal_atoms = self.get_terminal_atoms()
+        tail_map = {'sn1': 'C2', 'sn2': 'C3'}
+        for (tail, terminus) in terminal_atoms.items():
+            cur = f'{tail_map[tail]}{list(terminus.keys())[0]}'
+            prev = f'{tail_map[tail]}{list(terminus.keys())[0] - 1}'
+            prev_coords = molecule.get_coord(prev)
+            vector_ref = np.array([list(terminus.values())[0], prev_coords])
+            rtf_lipid = Template(f'lipids_from_rtf/{config["system"]["lipid"]}.pdb', 
+                                 config['system']['lipid'])
+            vector_comp = rtf_lipid.atomic_coordinates([cur, prev])
+            new_tail_names, new_tail_coords = rtf_lipid.missing_atoms(cur)
+            new_tail_coords = self.staple_tail(vector_ref, vector_comp, new_tail_coords)
+            new_tail_vec = [new_tail_coords[0, :], new_tail_coords[-1, :]]
+            
+            # choose z based on whether a majority of tail atoms are above or below phosphate
+            phosphate_coord = molecule.get_coord('P')
+            tail_coords = molecule.get_coord([f'{tail_map[tail]}{i}' 
+                                            for i in range(1, list(terminus.keys())[0])])
+            
+            num_above_phos = sum([1 for c in tail_coords if c[-1] > phosphate_coord[-1]])
+            if num_above_phos / tail_coords.shape[0] >= 0.5:
+                    z = np.array([0, 0, 1])
+            else:
+                    z = np.array([0, 0, -1])
 
-        # prioritize modeling order
-
-        # model atoms one at a time
-
-        # this method will perform first-pass modeling only
-        return 1
-
-
-    def _add_atom(self, atom_name: str) -> None:
-        pass
-
+            align_vec = np.vstack((new_tail_vec[0], new_tail_vec[0] + z))
+            new_tail_coords = self.staple_tail(align_vec, new_tail_vec, new_tail_coords)
+            
+            self.add_to_pdb(new_tail_names, new_tail_coords)
+            self.write_to_pdb_file(molecule.pdb_contents)
 
     @staticmethod
     def vectorize(*args) -> List[np.ndarray]:
@@ -88,21 +105,6 @@ class Lipid(PDB):
         plane_normal = np.cross(v1, v2)
         return 90 - np.arccos(plane_normal @ v3) * 180 / np.pi
 
-
-    @staticmethod
-    def rotate_angle(a: np.ndarray, b: np.ndarray,
-                     c: np.ndarray, angle: int) -> List[np.ndarray]:
-        rotation_matrix = Rotation.from_euler('', angle, degrees=True)
-        rotated_array = rotation_matrix.apply(array)
-        return rotated_array
-
-
-    def rotate_dihedral():
-        pass
-
-
-    def rotate_improper():
-        pass
     
     @staticmethod
     def staple_tail(v1, v2, arr):
@@ -112,9 +114,14 @@ class Lipid(PDB):
         of angle and translation using the Kabsch algorithm. Apply this
         rotation onto the array `arr`.
         """ 
+        center = v2[0]
+        #center = np.mean(arr, axis=0)
+        translation = v1[0]
+        
         rotmatrix = Rotation.align_vectors((v1[1] - v1[0]).reshape(1, 3), 
                                            (v2[1] - v2[0]).reshape(1, 3))[0]
-        return rotmatrix.apply(arr)
+        
+        return rotmatrix.apply(arr - center) + translation
         
     
     def get_terminal_atoms(self):
@@ -140,11 +147,22 @@ class Lipid(PDB):
         sn1_dict = {highest_sn1[0]: highest_sn1[1]}
         sn2_dict = {highest_sn2[0]: highest_sn2[1]}
         return {'sn1': sn1_dict, 'sn2': sn2_dict}
+    
         
     def get_coord(self, name):
-        for atom in self.contents:
-            if atom[2].strip() == name:
-                return np.array([float(x.strip()) for x in atom[6:9]])
+        if isinstance(name, list):
+            coords = np.zeros((len(name), 3))
+            for i, n in enumerate(name):
+                for atom in self.contents:
+                    if atom[2].strip() == n:
+                        coords[i] = [float(x.strip()) for x in atom[6:9]]
+                        break
+            return coords
+                
+        else:
+            for atom in self.contents:
+                if atom[2].strip() == name:
+                    return np.array([float(x.strip()) for x in atom[6:9]])
             
         raise ValueError(f'Atom {name} not found in partial lipid!')
 

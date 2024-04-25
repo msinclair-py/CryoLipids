@@ -210,6 +210,42 @@ class MolecularGraph:
         return coords
 
 
+class SparseVoxelOctree:
+    def __init__(self, root, depth):
+        self.root = root
+        self.depth = depth
+    
+    def insert(self, point):
+        node = self.root
+        for i in range(self.depth):
+            bit = (point[i] >> (self.depth - 1 - i)) & 1
+            if node.children[bit] is None:
+                node.children[bit] = SparseVoxelOctreeNode()
+            node = node.children[bit]
+        
+    def query(self, point):
+        node = self.root
+        for i in range(self.depth):
+            bit = (point[i] >> (self.depth - 1 - i)) & 1
+            if node.children[bit] is None:
+                return False
+            node = node.children[bit]
+        return True
+    
+class SparseVoxelOctreeNode:
+    def __init__(self):
+        self.children = [None] * 8
+        
+class SVO:
+    def __init__(self, points, depth):
+        self.octree = SparseVoxelOctree(SparseVoxelOctreeNode(), depth)
+        for point in points:
+            self.octree.insert(point)
+            
+    def query(self, point):
+        return self.octree.query(point)
+
+
 class PersistentHomology:
     """
     Class for obtaining persistence diagrams and performing Wasserstein
