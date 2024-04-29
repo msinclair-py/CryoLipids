@@ -12,11 +12,13 @@ class Lipid(PDB):
     """
     def __init__(self, pdbfile: str, resid: int, 
                     ic_table: Dict[str, Dict[str, float]],
+                    lipid_type: str,
                     current_restype: str = 'POV'):
 
        super().__init__(pdbfile, [resid], resname=current_restype)
        self.ic_table = ic_table
        self.pdb_contents = self.contents
+       self.lipid_type = lipid_type
        self.unmodeled = deepcopy(self.pdb_contents)
     
     def extract_coordinates(self) -> np.ndarray:
@@ -38,24 +40,35 @@ class Lipid(PDB):
         
 
     def model(self):
+        """
+        Main lipid modeling function. 
+        (i) Identifies terminally modeled atoms
+        (ii) Generates list of what atoms are left to model
+        (iii) Aligns an example of a complete lipid tail based on the 
+            final two modeled atoms
+        (iv) Rotates the newly modeled atoms such that a vector going from 
+            new_atom_0 -> new_atom_n is aligned along the z axis ({0, 0, 1} 
+            or {0, 0, -1} based on whether a majority of atoms are above or 
+            below the phosphorous atom).
+        """
         terminal_atoms = self.get_terminal_atoms()
         tail_map = {'sn1': 'C2', 'sn2': 'C3'}
         for (tail, terminus) in terminal_atoms.items():
             cur = f'{tail_map[tail]}{list(terminus.keys())[0]}'
             prev = f'{tail_map[tail]}{list(terminus.keys())[0] - 1}'
-            prev_coords = molecule.get_coord(prev)
+            prev_coords = self.get_coord(prev)
             vector_ref = np.array([list(terminus.values())[0], prev_coords])
-            rtf_lipid = Template(f'lipids_from_rtf/{config["system"]["lipid"]}.pdb', 
-                                 config['system']['lipid'])
+            rtf_lipid = Template(f'lipids_from_rtf/{self.lipid_type}.pdb', 
+                                 self.lipid_type)
             vector_comp = rtf_lipid.atomic_coordinates([cur, prev])
             new_tail_names, new_tail_coords = rtf_lipid.missing_atoms(cur)
             new_tail_coords = self.staple_tail(vector_ref, vector_comp, new_tail_coords)
             new_tail_vec = [new_tail_coords[0, :], new_tail_coords[-1, :]]
             
             # choose z based on whether a majority of tail atoms are above or below phosphate
-            phosphate_coord = molecule.get_coord('P')
-            tail_coords = molecule.get_coord([f'{tail_map[tail]}{i}' 
-                                            for i in range(1, list(terminus.keys())[0])])
+            phosphate_coord = self.get_coord('P')
+            tail_coords = self.get_coord([f'{tail_map[tail]}{i}' 
+                                          for i in range(1, list(terminus.keys())[0])])
             
             num_above_phos = sum([1 for c in tail_coords if c[-1] > phosphate_coord[-1]])
             if num_above_phos / tail_coords.shape[0] >= 0.5:
@@ -67,7 +80,7 @@ class Lipid(PDB):
             new_tail_coords = self.staple_tail(align_vec, new_tail_vec, new_tail_coords)
             
             self.add_to_pdb(new_tail_names, new_tail_coords)
-            self.write_to_pdb_file(molecule.pdb_contents)
+            self.write_to_pdb_file(self.pdb_contents)
 
     @staticmethod
     def vectorize(*args) -> List[np.ndarray]:
@@ -105,9 +118,21 @@ class Lipid(PDB):
         plane_normal = np.cross(v1, v2)
         return 90 - np.arccos(plane_normal @ v3) * 180 / np.pi
 
+    def repair_tail_clashes():
+        pass
     
     @staticmethod
-    def staple_tail(v1, v2, arr):
+    def rotate_tail(tail_atoms: np.ndarray, rotate_by: float=30.) -> np.ndarray:
+        a1, a2, a3, a4 = tail_atoms[:4]
+        angle = self.measure_dihedral(a1, a2, a3, a4)
+        
+        
+        
+        return tail_atoms
+    
+    @staticmethod
+    def staple_tail(v1: np.ndarray, v2: np.ndarray, 
+                    arr: np.ndarray) -> np.ndarray:
         """
         Given 2 arrays of 2 points each, which define our two vectors,
         generate the rotation matrix which aligns v2 onto v1 both in terms

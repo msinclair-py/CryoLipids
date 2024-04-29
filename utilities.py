@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import os
-from itertools import combinations
-from typing import Dict, List, Union, Set
+from typing import Dict, List, Union
 
 class PDB:
     """
@@ -67,8 +66,16 @@ class PDB:
         return f'{"".join(new_line)}\n'
 
 
-    def write_to_pdb_file(self, contents: List[str]) -> None:
-        fname = os.path.join(self.output_path, f'processed_{os.path.basename(self.filename)}')
+    def write_to_pdb_file(self, contents: List[str], 
+                          hydrogens: bool=False) -> None:
+        """
+        Write to contents 
+        Args:
+            contents (List[str]): _description_
+            hydrogens (bool, optional): _description_. Defaults to False.
+        """
+        fname = os.path.join(self.output_path, 
+                             f'processed_{os.path.basename(self.filename)}')
         
         with open(fname, 'w') as outfile:
             for line in contents:

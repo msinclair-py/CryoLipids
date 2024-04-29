@@ -16,9 +16,12 @@ class CollisionDetector:
         methods = [LinearProgramming, DelaunayTriangulation, SVO]
         self.detector = methods[method](protein, **kwargs)
         
-    def query_points(self, point: None) -> List[bool]:
+    def query_points(self, point: NoneType=None) -> List[bool]:
         if point is not None:
             self.detector.query(point)
+        elif isinstance(point, list):
+            for pt in point:
+                self.detector.query(pt)
         else:
             for point in self.lipid:
                 self.detector.query(point)

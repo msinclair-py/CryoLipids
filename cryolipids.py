@@ -27,15 +27,15 @@ lipid = Lipid(structure,
 # model lipid
 lipid.model()
 
-# do vacuum minimization
-minimizer = VacuumSimulator()
-
 # check for protein conflict; octree?
 collision_detector = CollisionDetector(protein, lipid, method=0)
-collision_detector.query()
+collision_detector.query_points()
 
 # fix conflict
 
 
+# do vacuum minimization
+minimizer = VacuumSimulator(f'processed_{name}.pdb')
+
 # do implicit solvent minimization and relaxation
-minimizer = ImplicitSolventSimulator()
+minimizer = ImplicitSolventSimulator('vacuum_min.pdb')

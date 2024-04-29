@@ -2,8 +2,6 @@
 from copy import deepcopy
 from itertools import combinations
 import numpy as np
-import persim
-import ripser
 from typing import Dict, List, Set, Tuple
 
 class MolecularGraph:
@@ -244,44 +242,3 @@ class SVO:
             
     def query(self, point):
         return self.octree.query(point)
-
-
-class PersistentHomology:
-    """
-    Class for obtaining persistence diagrams and performing Wasserstein
-    distance analysis on one point cloud versus a set of point clouds.
-    Identifies the best possible match.
-    """
-
-    def __init__(self, cloud: List[List[float]], 
-                    cloud_library: Dict[str, np.ndarray]):
-        self.cloud = PersistentHomology.get_diagram(np.array(cloud))
-        self.cloud_library = cloud_library
-
-
-    @staticmethod
-    def get_diagram(data: np.ndarray) -> List[np.ndarray]:
-        """
-        Using algebraic topology, obtain a persistence diagram
-        of each fragment for comparison with experimentally-derived
-        lipid fragments.
-        """
-        return ripser.ripser(data)['dgms']
-
-
-    @property
-    def best_fit(self, N_H0: int = 10) -> Tuple[int, np.ndarray]:
-        features = np.zeros((len(self.cloud_library), 2))
-
-        for idx, diagram in self.cloud_library.items():
-            h0 = persim.wasserstein(self.cloud[0], diagram[0])
-            h1 = persim.wasserstein(self.cloud[1], diagram[1])
-            features[idx] = np.array([h0, h1], ndmin=2)
-
-        # find 10 minimal h0s
-        idxs = np.argpartition(features[:,0], N_H0)[:10]
-        print(features[idxs,:])
-        # find minimal h1
-        min_H1 = idxs[np.argmin(features[idxs, 1])]
-
-        return min_H1, features
