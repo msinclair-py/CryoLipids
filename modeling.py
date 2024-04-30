@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from collision_detection import CollisionDetector
 from copy import deepcopy
 import numpy as np
 from scipy.spatial.transform import Rotation
@@ -10,16 +11,18 @@ class Lipid(PDB):
     Class for modeling a single lipid of resID `resid` and resType `restype`
     using an input CHARMM IC table and connectivity graph.
     """
-    def __init__(self, pdbfile: str, resid: int, 
-                    ic_table: Dict[str, Dict[str, float]],
+    def __init__(self, pdbfile: str, resid: int,
                     lipid_type: str,
-                    current_restype: str = 'POV'):
+                    current_restype: str = 'POV',
+                    collision: int = 0):
 
        super().__init__(pdbfile, [resid], resname=current_restype)
-       self.ic_table = ic_table
        self.pdb_contents = self.contents
        self.lipid_type = lipid_type
+       #self.protein = self.get_protein_coords()
        self.unmodeled = deepcopy(self.pdb_contents)
+       self.collision_detector = None
+       self.collision = collision
     
     def extract_coordinates(self) -> np.ndarray:
         pdb_contents = np.asarray(self.contents)
@@ -49,7 +52,8 @@ class Lipid(PDB):
         (iv) Rotates the newly modeled atoms such that a vector going from 
             new_atom_0 -> new_atom_n is aligned along the z axis ({0, 0, 1} 
             or {0, 0, -1} based on whether a majority of atoms are above or 
-            below the phosphorous atom).
+            below the phosphorous atom)
+        (v) Checks for and repairs protein-lipid clashes
         """
         terminal_atoms = self.get_terminal_atoms()
         tail_map = {'sn1': 'C2', 'sn2': 'C3'}
@@ -118,15 +122,21 @@ class Lipid(PDB):
         plane_normal = np.cross(v1, v2)
         return 90 - np.arccos(plane_normal @ v3) * 180 / np.pi
 
-    def repair_tail_clashes():
+    def repair_tail_clashes(self, lipid: np.ndarray, clash: str) -> np.ndarray:
+        #if self.collision_detector is None:
+        #    self.collision_detector = CollisionDetector(self.protein, lipid, 
+        #                                                method=self.collision)
+            
+        
         pass
     
     @staticmethod
     def rotate_tail(tail_atoms: np.ndarray, rotate_by: float=30.) -> np.ndarray:
-        a1, a2, a3, a4 = tail_atoms[:4]
-        angle = self.measure_dihedral(a1, a2, a3, a4)
+        _, a2, a3, a4 = tail_atoms[:4]
+        v1, v2 = a3 - a2, a4 - a3
+        rotmatrix = Rotation.from_rotvec(rotate_by * v1 / np.linalg.norm(v1))
         
-        
+        rotmatrix.apply(v2)
         
         return tail_atoms
     

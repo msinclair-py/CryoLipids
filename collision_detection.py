@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import linprog
 from scipy.spatial import Delaunay
-from typing import List
+from typing import List, Tuple
 
 class CollisionDetector:
     """
@@ -12,21 +12,121 @@ class CollisionDetector:
     """
     def __init__(self, protein: np.ndarray, lipid: np.ndarray, 
                  method: int=0, **kwargs):
+        if not isinstance(protein, np.ndarray):
+            protein = np.array(protein)
+            
         self.lipid = lipid
-        methods = [LinearProgramming, DelaunayTriangulation, SVO]
+        methods = [OccupancyMap, LinearProgramming, DelaunayTriangulation, SVO]
         self.detector = methods[method](protein, **kwargs)
         
-    def query_points(self, point: NoneType=None) -> List[bool]:
+    def query_points(self, point: None=None) -> List[bool]:
         if point is not None:
-            self.detector.query(point)
-        elif isinstance(point, list):
-            for pt in point:
-                self.detector.query(pt)
+            clashes = self.detector.query(point)
         else:
-            for point in self.lipid:
-                self.detector.query(point)
+            clashes = self.detector.query(self.lipid)
+        
+        #clashes = []
+        #if isinstance(point, list):
+        #    for i, pt in enumerate(point):
+        #        if self.detector.query(pt.reshape(3,)):
+        #            clashes.append(i)
+        #elif point is not None:
+        #    return self.detector.query(point)
+        #else:
+        #    for i, pt in enumerate(self.lipid):
+        #        if self.detector.query(pt.reshape(3,)):
+        #            clashes.append(i)
+
+        if any(clashes):
+            return clashes
+        else:
+            return False
+        
+class OccupancyMap:
+    """
+    Grids the protein space into a grid of shape (ceil(max) - floor(min) + 2*pad) 
+    in each dimension. This allows for a clean, even gridspace to map atomic occupancies.
+    Each voxel of the grid is assigned 1 if there are any protein atoms and 0 if there
+    are no protein atoms. The grid can then be queried to see if any lipid atoms are in
+    an occupied voxel, meaning a clash.
+    ------
+    Inputs
+    ------
+    points (np.ndarray): coordinates of protein atoms
+    grid_spacing (float): spacing of grid in Angstroms
+    pad (int): padding to apply in Angstroms
+    """
+    def __init__(self, points: np.ndarray, grid_spacing: float=1.,
+                 pad: int=1):
+        self.points = points
+        self.grid_spacing = grid_spacing
+        self.pad = pad
+        self.grid = self.fill_grid(points)
+        
+    def define_axis(self, points: np.ndarray) -> np.ndarray:
+        """
+        Defines a single axis in the grid space. Performs the padding as well
+        as regularizing the grid space such that it is neatly divisible by
+        the `self.grid_spacing` parameter.
+        """
+        min_ = np.floor(np.min(points)) - self.pad
+        max_ = np.ceil(np.max(points)) + self.pad
+        len_ = max_ - min_
+        regularized_len = self.grid_spacing - len_ % self.grid_spacing
+        return min_, regularized_len
     
+    def define_bounds(self) -> None:
+        """
+        Defines the full grid parameters in x, y, z.
+        """
+        minx, lenx = self.define_axis(self.points[:, 0])
+        miny, leny = self.define_axis(self.points[:, 1])
+        minz, lenz = self.define_axis(self.points[:, 2])
+        
+        self.mins = [minx, miny, minz]
+        self.dims = [int(i / self.grid_spacing) for i in [lenx, leny, lenz]]
+        
+    def generate_grid(self) -> np.ndarray:
+        """
+        Initialize empty grid.
+        """
+        return np.zeros((self.dims))
     
+    def fill_grid(self, points: np.ndarray) -> np.ndarray:
+        """
+        Fill grid with occupancies based on `points`.
+        """
+        self.define_bounds()
+        grid = self.generate_grid()
+        for point in points:
+            xi, yi, zi = self.get_indices(point)
+            grid[xi, yi, zi] = 1
+        
+        return grid
+    
+    def get_indices(self, point: np.ndarray) -> Tuple[float]:
+        """
+        Gets index corresponding to correct voxel in grid. Takes the
+        `self.grid_spacing` into account.
+        """
+        return [int(np.floor(point[i] - self.mins[i]) / self.grid_spacing) 
+                for i in range(len(self.mins))]
+    
+    def query(self, points: np.ndarray) -> List[int]:
+        """
+        Queries whether a given point or points are in any occupied voxels.
+        """
+        if not isinstance(points, np.ndarray):
+            points = np.array(points, ndmin=2)
+            
+        clashes = []
+        for i, point in enumerate(points):
+            xi, yi, zi = self.get_indices(point)
+            if self.grid[xi, yi, zi]:
+                clashes.append(i)
+        
+        return clashes
+            
 class LinearProgramming:
     """
     Perform collision detection using linear programming. This avoids the need

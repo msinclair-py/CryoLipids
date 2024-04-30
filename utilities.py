@@ -64,7 +64,19 @@ class PDB:
         new_line += f'{line[3]:<4}{line[4]}{line[5]:>4}    '
         new_line += f'{float(line[6]):>8.3f}{float(line[7]):>8.3f}{float(line[8]):>8.3f}'
         return f'{"".join(new_line)}\n'
-
+    
+    @property
+    def protein(self):
+        lines = [line for line in open(self.filename, 'r').readlines() 
+                 if 'ATOM' == line[:4]]
+        prot = [line for line in lines if any(aa in line for aa in self.amino_acids)]
+        return prot
+    
+    @property
+    def amino_acids(self):
+        return ['ARG', 'HIS', 'HSD', 'HSE', 'HSP', 'LYS', 'ASP', 'GLU', 
+                'SER', 'THR', 'ASN', 'GLN', 'CYS', 'GLY', 'PRO', 'ALA', 
+                'VAL', 'ILE', 'LEU', 'MET', 'PHE', 'TYR', 'TRP']
 
     def write_to_pdb_file(self, contents: List[str], 
                           hydrogens: bool=False) -> None:
