@@ -71,8 +71,9 @@ class OccupancyMap:
         """
         min_ = np.floor(np.min(points)) - self.pad
         max_ = np.ceil(np.max(points)) + self.pad
+        
         len_ = max_ - min_
-        regularized_len = self.grid_spacing - len_ % self.grid_spacing
+        regularized_len = len_ + self.grid_spacing - len_ % self.grid_spacing
         return min_, regularized_len
     
     def define_bounds(self) -> None:
@@ -122,9 +123,12 @@ class OccupancyMap:
         clashes = []
         for i, point in enumerate(points):
             xi, yi, zi = self.get_indices(point)
-            if self.grid[xi, yi, zi]:
-                clashes.append(i)
-        
+            try:
+                if self.grid[xi, yi, zi]:
+                    clashes.append(i)
+            except IndexError:
+                continue
+            
         return clashes
             
 class LinearProgramming:

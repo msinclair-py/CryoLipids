@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from collision_detection import CollisionDetector
-#from minimizer import VacuumSimulator, ImplicitSolventSimulator
+from minimizer import VacuumSimulator, ImplicitSolventSimulator
 from modeling import Lipid
 from utilities import PDB
 import tomllib
@@ -26,15 +26,20 @@ lipid.model()
 # check for protein conflict; octree?
 protein_coords = [[float(i) for i in line[32:54].strip().split()] 
                   for line in pdb.protein]
-collision_detector = CollisionDetector(protein_coords, lipid, method=0)
+
+collision_detector = CollisionDetector(protein_coords, 
+                                       lipid.extract_coordinates(), 
+                                       method=0)
+
 collisions = collision_detector.query_points()
 print(collisions)
 
 # fix conflict
-
+if any(collisions):
+    pass
 
 # do vacuum minimization
-#minimizer = VacuumSimulator(f'processed_{name}.pdb')
+minimizer = VacuumSimulator(f'processed_{name}.pdb')
 
 # do implicit solvent minimization and relaxation
-#minimizer = ImplicitSolventSimulator('vacuum_min.pdb')
+minimizer = ImplicitSolventSimulator('vacuum_min.pdb')

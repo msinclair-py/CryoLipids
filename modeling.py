@@ -25,8 +25,9 @@ class Lipid(PDB):
        self.collision = collision
     
     def extract_coordinates(self) -> np.ndarray:
-        pdb_contents = np.asarray(self.contents)
-        return pdb_contents[:,6:9].astype(np.float64)
+        coords = np.zeros((len(self.pdb_contents), 
+                           len(self.pdb_contents[0])))
+        return coords[:, 6:9].astype(np.float64)
     
     def add_to_pdb(self, atom_names: List[str], coords: np.ndarray) -> None:
         last_num = int(self.pdb_contents[-2][1])
