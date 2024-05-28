@@ -25,18 +25,6 @@ class CollisionDetector:
         else:
             clashes = self.detector.query(self.lipid)
         
-        #clashes = []
-        #if isinstance(point, list):
-        #    for i, pt in enumerate(point):
-        #        if self.detector.query(pt.reshape(3,)):
-        #            clashes.append(i)
-        #elif point is not None:
-        #    return self.detector.query(point)
-        #else:
-        #    for i, pt in enumerate(self.lipid):
-        #        if self.detector.query(pt.reshape(3,)):
-        #            clashes.append(i)
-
         if any(clashes):
             return clashes
         else:
