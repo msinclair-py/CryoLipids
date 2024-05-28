@@ -28,7 +28,7 @@ protein_coords = [[float(i) for i in line[32:54].strip().split()]
                   for line in pdb.protein]
 
 collision_detector = CollisionDetector(protein_coords, 
-                                       lipid.extract_coordinates(), 
+                                       lipid, 
                                        method=0)
 
 collisions = collision_detector.query_points()

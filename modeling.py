@@ -25,9 +25,10 @@ class Lipid(PDB):
        self.collision = collision
     
     def extract_coordinates(self) -> np.ndarray:
-        coords = np.zeros((len(self.pdb_contents), 
-                           len(self.pdb_contents[0])))
-        return coords[:, 6:9].astype(np.float64)
+        coords = np.zeros((len(self.pdb_contents), 3))
+        for i, line in enumerate(self.pdb_contents):
+            coords[i, :] = line[6:9]
+        return coords.astype(np.float64)
     
     def add_to_pdb(self, atom_names: List[str], coords: np.ndarray) -> None:
         last_num = int(self.pdb_contents[-2][1])
@@ -123,7 +124,7 @@ class Lipid(PDB):
         plane_normal = np.cross(v1, v2)
         return 90 - np.arccos(plane_normal @ v3) * 180 / np.pi
 
-    def repair_tail_clashes(self, lipid: np.ndarray, clash: str) -> np.ndarray:
+    def repair_tail_clashes(self, lipid: np.ndarray, clash: List[str]) -> np.ndarray:
         #if self.collision_detector is None:
         #    self.collision_detector = CollisionDetector(self.protein, lipid, 
         #                                                method=self.collision)
