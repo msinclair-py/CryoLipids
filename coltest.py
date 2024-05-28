@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from collision_detection import CollisionDetector
+from modeling import Lipid
 import numpy as np
 
 inp = 'misc/collision.pdb'
@@ -11,12 +12,18 @@ lipid = np.array([[float(x) for x in line[31:54].strip().split()]
 
 lipid_lines = np.array([line for line in lines if 'POV' in line])
 
+lipid = Lipid(inp, 
+              5, 'POPC',
+              current_restype='POV')
+
 occupancy_map = CollisionDetector(protein, lipid)
 #linear_programming = CollisionDetector(protein, lipid, method=1)
 delaunay_triangulation = CollisionDetector(protein, lipid, method=2)
 #sparse_voxel_octree = CollisionDetector(protein, lipid, method=3)
 
-print(f'{lipid_lines[occupancy_map.query_points()]=}')
+print(f'{occupancy_map.query_points()=}')
+print(f'{delaunay_triangulation.query_points()=}')
+#print(f'{lipid_lines[occupancy_map.query_points()]=}')
 #print(f'{linear_programming.query_points()=}')
-print(f'{lipid_lines[delaunay_triangulation.query_points()]=}')
+#print(f'{lipid_lines[delaunay_triangulation.query_points()]=}')
 #print(f'{sparse_voxel_octree.query_points()=}')

@@ -14,8 +14,9 @@ class CollisionDetector:
                  method: int=0, **kwargs):
         if not isinstance(protein, np.ndarray):
             protein = np.array(protein)
-            
-        self.lipid = lipid
+        
+        self.raw_lipid = np.array(lipid.pdb_contents)
+        self.lipid_coordinates = lipid.extract_coordinates()
         methods = [OccupancyMap, LinearProgramming, DelaunayTriangulation, SVO]
         self.detector = methods[method](protein, **kwargs)
         
@@ -23,10 +24,10 @@ class CollisionDetector:
         if point is not None:
             clashes = self.detector.query(point)
         else:
-            clashes = self.detector.query(self.lipid)
+            clashes = self.detector.query(self.lipid_coordinates)
         
         if any(clashes):
-            return clashes
+            return [line[2] for line in self.raw_lipid[clashes]]
         else:
             return False
         
