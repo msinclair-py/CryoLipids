@@ -128,6 +128,9 @@ class Lipid(PDB):
         #if self.collision_detector is None:
         #    self.collision_detector = CollisionDetector(self.protein, lipid, 
         #                                                method=self.collision)
+        if 'C3' in clashes:
+            min = get_minimum(name[2:]) for name in clashes
+            atoms_to_measure_rotation = (f'C3{min-2}', f'C3{min-1}')
             
         
         pass

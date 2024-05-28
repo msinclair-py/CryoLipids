@@ -36,7 +36,7 @@ print(collisions)
 
 # fix conflict
 if any(collisions):
-    pass
+    lipid.repair_tail_clashes(collisions)
 
 # do vacuum minimization
 minimizer = VacuumSimulator(f'processed_{name}.pdb')
