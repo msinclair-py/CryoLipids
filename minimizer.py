@@ -10,8 +10,8 @@ class VacuumSimulator:
     nearly any system.
     """
     def __init__(self, structure, output=os.getcwd(),
-                 forcefield='amber14/protein.ff14SB.xml', 
-                 temp=300 * kelvin, press=1 * bar, nonbondedMethod=app.NoCutoff, 
+                 forcefield='charmm36.xml', temp=300 * kelvin, 
+                 press=1 * bar, nonbondedMethod=app.NoCutoff, 
                  constraints=app.HBonds, collision_freq=1 / picosecond,
                  timestep=0.002 * picosecond, platform='CUDA'):
         self.structure = structure
@@ -76,8 +76,8 @@ class ImplicitSolventSimulator(VacuumSimulator):
     implicit solvent. For other options see OpenMM documentation:
     """
     def __init__(self, structure, output=os.getcwd(),
-                 forcefield='amber14/protein.ff14SB.xml', 
-                 temp=300 * kelvin, press=1 * bar, nonbondedMethod=app.NoCutoff, 
+                 forcefield='charmm36.xml', temp=300 * kelvin, 
+                 press=1 * bar, nonbondedMethod=app.NoCutoff, 
                  constraints=app.HBonds, collision_freq=1 / picosecond,
                  timestep=0.002 * picosecond, platform='CUDA', 
                  solvent='implicit/gbn2.xml'):

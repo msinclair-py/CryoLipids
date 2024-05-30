@@ -3,7 +3,7 @@ from collision_detection import CollisionDetector
 from copy import deepcopy
 import numpy as np
 from scipy.spatial.transform import Rotation
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from utilities import PDB
 
 class Lipid(PDB):
@@ -124,26 +124,63 @@ class Lipid(PDB):
         plane_normal = np.cross(v1, v2)
         return 90 - np.arccos(plane_normal @ v3) * 180 / np.pi
 
-    def repair_tail_clashes(self, lipid: np.ndarray, clash: List[str]) -> np.ndarray:
-        #if self.collision_detector is None:
-        #    self.collision_detector = CollisionDetector(self.protein, lipid, 
-        #                                                method=self.collision)
-        if 'C3' in clashes:
-            min = get_minimum(name[2:]) for name in clashes
-            atoms_to_measure_rotation = (f'C3{min-2}', f'C3{min-1}')
-            
+    def repair_tail_clashes(self, clashes: List[str]) -> np.ndarray:
+        #self.pdb_contents
+        c2s, c3s = [], []
+        for clash in clashes:
+            match clash:
+                case 'C2*':
+                    c2s.append(clash)
+                case 'C3*':
+                    c3s.append(clash)
+                case _:
+                    raise NotImplementedError('Clash on non-tail detected!')
         
-        pass
+        for tail in [c2s, c3s]:
+            if tail:
+                atoms_to_rotate = self.get_clash_rotation(tail)
+                old_coords = self.get_coord(atoms_to_rotate)
+                new_coords = self.rotate_tail(old_coords)
+                self.update_coordinates(atoms_to_rotate[2:], new_coords)
+                
+
+    @staticmethod
+    def get_clash_rotation(clashing_atoms: List[str]) -> Tuple[List[], List[]]:
+        tail_type = clashing_atoms[0][:2]
+        first_clash = min([int(name[2:]) for name in clashing_atoms])
+        
+        match tail_type:
+            case 'C2':
+                length = 18
+            case 'C3':
+                length = 16
+            case _:
+                raise ValueError(f'{tail_type=}. This is not a valid tail identifier!')
+            
+        bond_to_rotate = [f'{tail_type}{first_clash - 2}', 
+                          f'{tail_type}{first_clash - 1}']
+        atoms_to_rotate = [f'{tail_type}{i}' for i in range(first_clash, length + 1)]
+        
+        return bond_to_rotate + atoms_to_rotate
     
     @staticmethod
-    def rotate_tail(tail_atoms: np.ndarray, rotate_by: float=30.) -> np.ndarray:
-        _, a2, a3, a4 = tail_atoms[:4]
-        v1, v2 = a3 - a2, a4 - a3
-        rotmatrix = Rotation.from_rotvec(rotate_by * v1 / np.linalg.norm(v1))
+    def rotate_tail(tail_atoms: np.ndarray, rotate_by: float=15.) -> np.ndarray:
+        """
+        Performs a rotation about the bond between the first two atoms of `tail_atoms`.
+        Units of rotation are in degrees.
+        """
+        a1, a2, to_rotate = tail_atoms
+        vector = a2 - a1
         
-        rotmatrix.apply(v2)
+        align = Rotation.align_vectors(np.array([0, 0, 1]), vector)
+        rotate = Rotation.from_euler('z', rotate_by, degrees=True)
+        put_back = Rotation.align_vector(vector, np.array([0, 0, 1]))
         
-        return tail_atoms
+        align.apply(to_rotate)
+        rotate.apply(to_rotate)
+        put_back.apply(to_rotate)
+        
+        return to_rotate
     
     @staticmethod
     def staple_tail(v1: np.ndarray, v2: np.ndarray, 
@@ -155,7 +192,6 @@ class Lipid(PDB):
         rotation onto the array `arr`.
         """ 
         center = v2[0]
-        #center = np.mean(arr, axis=0)
         translation = v1[0]
         
         rotmatrix = Rotation.align_vectors((v1[1] - v1[0]).reshape(1, 3), 
@@ -205,6 +241,24 @@ class Lipid(PDB):
                     return np.array([float(x.strip()) for x in atom[6:9]])
             
         raise ValueError(f'Atom {name} not found in partial lipid!')
+    
+    def update_coords(self, names: List[str], coords: np.ndarray) -> None:
+        """Does this even work??
+
+        Args:
+            names (List[str]): _description_
+            coords (np.ndarray): _description_
+
+        Raises:
+            ValueError: _description_
+        """
+        for (name, coord) in zip(names, coords):
+            for line in self.pdb_contents:
+                if line[2] == name:
+                    line[6:9] = coord
+                    break
+            else:
+                raise ValueError(f'Atom {name} not found in `self.pdb_contents`!')
 
 
 class Template(PDB):
