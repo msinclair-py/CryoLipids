@@ -125,6 +125,7 @@ class Lipid(PDB):
         return 90 - np.arccos(plane_normal @ v3) * 180 / np.pi
 
     def repair_tail_clashes(self, clashes: List[str]) -> np.ndarray:
+        # MOVE TO NEW REPAIR CLASS
         #self.pdb_contents
         c2s, c3s = [], []
         for clash in clashes:
@@ -146,6 +147,7 @@ class Lipid(PDB):
 
     @staticmethod
     def get_clash_rotation(clashing_atoms: List[str]) -> Tuple[List[], List[]]:
+        # MOVE TO NEW REPAIR CLASS
         tail_type = clashing_atoms[0][:2]
         first_clash = min([int(name[2:]) for name in clashing_atoms])
         
@@ -169,6 +171,7 @@ class Lipid(PDB):
         Performs a rotation about the bond between the first two atoms of `tail_atoms`.
         Units of rotation are in degrees.
         """
+        # MOVE TO NEW REPAIR CLASS
         a1, a2, to_rotate = tail_atoms
         vector = a2 - a1
         
