@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.optimize import linprog
 from scipy.spatial import Delaunay
+from scipy.spatial.transform import Rotation
 from typing import List, Tuple
 
 class CollisionDetector:
@@ -61,8 +62,8 @@ class OccupancyMap:
         min_ = np.floor(np.min(points)) - self.pad
         max_ = np.ceil(np.max(points)) + self.pad
         
-        len_ = max_ - min_
-        regularized_len = len_ + self.grid_spacing - len_ % self.grid_spacing
+        len_ = max_ - min_ + self.grid_spacing
+        regularized_len = len_ - len_ % self.grid_spacing
         return min_, regularized_len
     
     def define_bounds(self) -> None:
@@ -198,3 +199,84 @@ class SVO:
             
     def query(self, point: np.ndarray) -> bool:
         return self.octree.query(point)
+
+class Repairer:
+    """
+    Class to orchestrate collision detection and repair. Takes in an instance of
+    the `Lipid` class for both its coordinates and a few methods, protein coordinates
+    as a numpy array, and an instance of CollisionDetector to perform the actual
+    collision detection.
+    """
+    def __init__(self, lipid: Lipid, 
+                 protein_coordinates: np.ndarray, 
+                 collision_detector: CollisionDetector):
+        self.lipid = lipid
+        self.protein = protein_coordinates
+        self.detector = collision_detector
+        
+    def check_collisions(self):
+        clash = True
+        while clash:
+            clashes = self.detector.query(lipid)
+            if not clashes:
+                break
+            
+            self.rotate_atoms(clashes)
+
+    def repair_tail_clashes(self, clashes: List[str]) -> np.ndarray:
+        c2s, c3s = [], []
+        for clash in clashes:
+            match clash:
+                case 'C2*':
+                    c2s.append(clash)
+                case 'C3*':
+                    c3s.append(clash)
+                case _:
+                    raise NotImplementedError('Clash on non-tail detected!')
+        
+        for tail in [c2s, c3s]:
+            if tail:
+                atoms_to_rotate = self.get_clash_rotation(tail)
+                old_coords = self.lipid.get_coord(atoms_to_rotate)
+                new_coords = self.rotate_tail(old_coords)
+                self.lipid.update_coordinates(atoms_to_rotate[2:], new_coords)
+                
+
+    @staticmethod
+    def get_clash_rotation(clashing_atoms: List[str]) -> Tuple[List[str], 
+                                                               List[str]]:
+        tail_type = clashing_atoms[0][:2]
+        first_clash = min([int(name[2:]) for name in clashing_atoms])
+        
+        match tail_type:
+            case 'C2':
+                length = 18
+            case 'C3':
+                length = 16
+            case _:
+                raise ValueError(f'{tail_type=}. This is not a valid tail identifier!')
+            
+        bond_to_rotate = [f'{tail_type}{first_clash - 2}', 
+                          f'{tail_type}{first_clash - 1}']
+        atoms_to_rotate = [f'{tail_type}{i}' for i in range(first_clash, length + 1)]
+        
+        return bond_to_rotate + atoms_to_rotate
+    
+    @staticmethod
+    def rotate_tail(tail_atoms: np.ndarray, rotate_by: float=15.) -> np.ndarray:
+        """
+        Performs a rotation about the bond between the first two atoms of `tail_atoms`.
+        Units of rotation are in degrees.
+        """
+        a1, a2, to_rotate = tail_atoms
+        vector = a2 - a1
+        
+        align = Rotation.align_vectors(np.array([0, 0, 1]), vector)
+        rotate = Rotation.from_euler('z', rotate_by, degrees=True)
+        put_back = Rotation.align_vector(vector, np.array([0, 0, 1]))
+        
+        align.apply(to_rotate)
+        rotate.apply(to_rotate)
+        put_back.apply(to_rotate)
+        
+        return to_rotate

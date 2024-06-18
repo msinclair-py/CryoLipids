@@ -31,7 +31,7 @@ collision_detector = CollisionDetector(protein_coords,
                                        lipid, 
                                        method=0)
 
-# INITIALIZE REPAIR CLASS -> pass `lipid` and `collision_detector` and `protein_coords`
+# INITIALIZE REPAIR CLASS -> pass `lipid` and `collision_detector`
 
 # THIS SHOULD GO IN THE NEW REPAIR CLASS
 collisions = collision_detector.query_points()

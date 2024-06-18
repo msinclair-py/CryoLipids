@@ -146,7 +146,8 @@ class Lipid(PDB):
                 
 
     @staticmethod
-    def get_clash_rotation(clashing_atoms: List[str]) -> Tuple[List[], List[]]:
+    def get_clash_rotation(clashing_atoms: List[str]) -> Tuple[List[str], 
+                                                               List[str]]:
         # MOVE TO NEW REPAIR CLASS
         tail_type = clashing_atoms[0][:2]
         first_clash = min([int(name[2:]) for name in clashing_atoms])
