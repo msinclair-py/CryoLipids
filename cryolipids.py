@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from collision_detection import CollisionDetector
+from collision_detection import CollisionDetector, Repairer
 from minimizer import VacuumSimulator, ImplicitSolventSimulator
 from modeling import Lipid
 from utilities import PDB
@@ -23,7 +23,7 @@ lipid = Lipid(structure,
 # model lipid
 lipid.model()
 
-# check for protein conflict; octree?
+# check for protein conflicts
 protein_coords = [[float(i) for i in line[32:54].strip().split()] 
                   for line in pdb.protein]
 
@@ -31,15 +31,8 @@ collision_detector = CollisionDetector(protein_coords,
                                        lipid, 
                                        method=0)
 
-# INITIALIZE REPAIR CLASS -> pass `lipid` and `collision_detector`
-
-# THIS SHOULD GO IN THE NEW REPAIR CLASS
-collisions = collision_detector.query_points()
-print(collisions)
-
-# fix conflict
-if any(collisions):
-    lipid.repair_tail_clashes(collisions)
+repair = Repairer(lipid, protein_coords, collision_detector)
+repair.check_collisions()
 
 # do vacuum minimization
 minimizer = VacuumSimulator(f'processed_{name}.pdb')
