@@ -35,8 +35,8 @@ class PDB:
                      'y':        [38, 46],
                      'z':        [46, 54],
                      'occ':      [54, 60],
-                     'beta':     [60, 66],
-                     'segname':  [66, -1]}
+                     'beta':     [60, 66],} 
+                     #'segname':  [66, -1]}
 
         _r0, _r1 = _pdb_info['resid']
         parsed = []

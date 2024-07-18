@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from collision_detection import CollisionDetector
 from copy import deepcopy
 import numpy as np
 from scipy.spatial.transform import Rotation
@@ -233,9 +232,13 @@ class Lipid(PDB):
         if isinstance(name, list):
             coords = np.zeros((len(name), 3))
             for i, n in enumerate(name):
-                for atom in self.contents:
+                for atom in self.pdb_contents:
                     if atom[2].strip() == n:
-                        coords[i] = [float(x.strip()) for x in atom[6:9]]
+                        try:
+                            coords[i] = [float(x.strip()) for x in atom[6:9]]
+                        except AttributeError:
+                            coords[i] = atom[6:9]
+                            
                         break
             return coords
                 
@@ -257,12 +260,17 @@ class Lipid(PDB):
             ValueError: _description_
         """
         for (name, coord) in zip(names, coords):
-            for line in self.pdb_contents:
-                if line[2] == name:
-                    line[6:9] = coord
-                    break
-            else:
-                raise ValueError(f'Atom {name} not found in `self.pdb_contents`!')
+            
+            idx = np.where(np.array(self.pdb_contents, ndmin=2)[:, 2] == name)[0][0]
+            self.pdb_contents[idx][6:9] = coord
+
+
+            #for line in self.pdb_contents:
+             #   if line[2] == name:
+              #      line[6:9] = coord
+               #     break
+            #else:
+                #raise ValueError(f'Atom {name} not found in `self.pdb_contents`!')
 
 
 class Template(PDB):

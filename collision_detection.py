@@ -3,6 +3,7 @@ from scipy.optimize import linprog
 from scipy.spatial import Delaunay
 from scipy.spatial.transform import Rotation
 from typing import List, Tuple
+from modeling import Lipid
 
 class CollisionDetector:
     """
@@ -11,7 +12,7 @@ class CollisionDetector:
     sparse voxel octree algorithms. These are more well described in the 
     corresponding docstrings for each class below.
     """
-    def __init__(self, protein: np.ndarray, lipid: np.ndarray, 
+    def __init__(self, protein: np.ndarray, lipid: Lipid, 
                  method: int=0, **kwargs):
         if not isinstance(protein, np.ndarray):
             protein = np.array(protein)
@@ -22,11 +23,13 @@ class CollisionDetector:
         self.detector = methods[method](protein, **kwargs)
         
     def query_points(self, point: None=None) -> List[bool]:
-        if point is not None:
-            clashes = self.detector.query(point)
-        else:
+        if point is None:
             clashes = self.detector.query(self.lipid_coordinates)
+        else:
+            clashes = self.detector.query(point)
         
+        print(clashes)
+
         if any(clashes):
             return [line[2] for line in self.raw_lipid[clashes]]
         else:
@@ -59,6 +62,7 @@ class OccupancyMap:
         as regularizing the grid space such that it is neatly divisible by
         the `self.grid_spacing` parameter.
         """
+        print(points)
         min_ = np.floor(np.min(points)) - self.pad
         max_ = np.ceil(np.max(points)) + self.pad
         
@@ -73,7 +77,7 @@ class OccupancyMap:
         minx, lenx = self.define_axis(self.points[:, 0])
         miny, leny = self.define_axis(self.points[:, 1])
         minz, lenz = self.define_axis(self.points[:, 2])
-        
+        print(minx, lenx) 
         self.mins = [minx, miny, minz]
         self.dims = [int(i / self.grid_spacing) for i in [lenx, leny, lenz]]
         
@@ -112,6 +116,7 @@ class OccupancyMap:
             
         clashes = []
         for i, point in enumerate(points):
+            #print(self.mins, self.dims, point)
             xi, yi, zi = self.get_indices(point)
             try:
                 if self.grid[xi, yi, zi]:
@@ -208,38 +213,69 @@ class Repairer:
     collision detection.
     """
     def __init__(self, lipid: Lipid, 
-                 protein_coordinates: np.ndarray, 
-                 collision_detector: CollisionDetector):
+            protein: np.ndarray, 
+            collision_detector: int=0):
         self.lipid = lipid
-        self.protein = protein_coordinates
-        self.detector = collision_detector
-        
+        self.detector = CollisionDetector(protein, lipid, method=collision_detector)
+    #!/bin/bash
+# Run GPU-resident MD
+
+if [ "$#" -lt 2 ]; then
+  echo "This script requires at least two arguments:"
+  echo "  NAMD input file"
+  echo "  NAMD log file"
+  exit -1
+fi
+
+CONFIG_FILE=$1
+LOG_FILE=$2
+GPU_PATH=/work2/00339/ericbohm/frontera/namd_builds/NAMD_3.0b7pre_Linux-x86_64-multicore-CUDA/namd3
+
+sbatch -A MCB24004 --job-name=NAMD --nodes=1 --ntasks=1 --time=48:00:00 --partition=rtx << ENDINPUT
+#!/bin/bash
+
+cd $PWD
+ibrun "$GPU_PATH" +ppn 16 +pemap 0-7,16-23 +pmepes 7 +devices 0,1 "$CONFIG_FILE" > "$LOG_FILE"
+
+ENDINPUT
+    
     def check_collisions(self):
+        print('check_collisions')
+
         clash = True
         while clash:
-            clashes = self.detector.query(lipid)
+            clashes = self.detector.query_points()
+            print(clashes)
             if not clashes:
                 break
             
-            self.rotate_tail_clashes(clashes)
+            self.repair_tail_clashes(clashes)
 
     def repair_tail_clashes(self, clashes: List[str]) -> None:
+        print('repair_tail_clashes')
+        
         c2s, c3s = [], []
+
+        
         for clash in clashes:
-            match clash:
-                case 'C2*':
-                    c2s.append(clash)
-                case 'C3*':
-                    c3s.append(clash)
-                case _:
-                    raise NotImplementedError('Clash on non-tail detected!')
+            if 'C2' in clash:
+                c2s.append(clash)
+            elif 'C3' in clash:
+                c3s.append(clash)
+            else:
+                raise NotImplementedError('Clash on non-tail detected!')
         
         for tail, tail_length in zip([c2s, c3s], [18, 16]):
             if tail:
                 atoms_to_rotate = self.get_clash_rotation(tail, tail_length)
                 old_coords = self.lipid.get_coord(atoms_to_rotate)
                 new_coords = self.rotate_tail(old_coords)
-                self.lipid.update_coordinates(atoms_to_rotate[2:], new_coords)
+                print(old_coords[2])
+                print(new_coords[0])
+                #print(atoms_to_rotate)
+                #print(self.lipid.pdb_contents)
+                self.lipid.update_coords(atoms_to_rotate[2:], new_coords)
+                self.detector.lipid_coordinates = self.lipid.extract_coordinates()
                 
 
     @staticmethod
@@ -255,6 +291,8 @@ class Repairer:
             List[str]: List whose first two elements correspond to the bond to be rotated,
                 and whose remaining elements are to be actually rotated in cartesian space.
         """
+        print('get_clash_rotation')
+
         tail_type = clashing_atoms[0][:2]
         first_clash = min([int(name[2:]) for name in clashing_atoms])
  
@@ -268,15 +306,22 @@ class Repairer:
         Performs a rotation about the bond between the first two atoms of `tail_atoms`.
         Units of rotation are in degrees.
         """
+        print('rotate_tail')
+
         a1, a2, *to_rotate = tail_atoms # unpack into first two atoms and rest of atoms
         vector = a2 - a1
         
-        align = Rotation.align_vectors(np.array([0, 0, 1]), vector)
+        align = Rotation.align_vectors(np.array([0, 0, 1]), vector)[0]
         rotate = Rotation.from_euler('z', rotate_by, degrees=True)
-        put_back = align.inv()
+        put_back = Rotation.align_vectors(vector, np.array([0, 0, 1]))[0]
         
-        align.apply(to_rotate)
-        rotate.apply(to_rotate)
-        put_back.apply(to_rotate)
+        to_rotate = align.apply(to_rotate)
+        to_rotate = rotate.apply(to_rotate)
+        to_rotate = put_back.apply(to_rotate)
         
         return to_rotate
+
+    def write_pdb(self):
+        self.lipid.write_to_pdb_file(self.lipid.pdb_contents)
+
+    
