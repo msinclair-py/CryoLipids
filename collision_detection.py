@@ -49,7 +49,7 @@ class OccupancyMap:
     grid_spacing (float): spacing of grid in Angstroms
     pad (int): padding to apply in Angstroms
     """
-    def __init__(self, points: np.ndarray, grid_spacing: float=1.,
+    def __init__(self, points: np.ndarray, grid_spacing: float=1.5,
                  pad: int=1):
         self.points = points
         self.grid_spacing = grid_spacing
@@ -116,7 +116,6 @@ class OccupancyMap:
             
         clashes = []
         for i, point in enumerate(points):
-            #print(self.mins, self.dims, point)
             xi, yi, zi = self.get_indices(point)
             try:
                 if self.grid[xi, yi, zi]:
@@ -213,47 +212,34 @@ class Repairer:
     collision detection.
     """
     def __init__(self, lipid: Lipid, 
-            protein: np.ndarray, 
-            collision_detector: int=0):
+                 protein: np.ndarray, 
+                 collision_detector: int=0,
+                 **kwargs):
         self.lipid = lipid
-        self.detector = CollisionDetector(protein, lipid, method=collision_detector)
-    #!/bin/bash
-# Run GPU-resident MD
-
-if [ "$#" -lt 2 ]; then
-  echo "This script requires at least two arguments:"
-  echo "  NAMD input file"
-  echo "  NAMD log file"
-  exit -1
-fi
-
-CONFIG_FILE=$1
-LOG_FILE=$2
-GPU_PATH=/work2/00339/ericbohm/frontera/namd_builds/NAMD_3.0b7pre_Linux-x86_64-multicore-CUDA/namd3
-
-sbatch -A MCB24004 --job-name=NAMD --nodes=1 --ntasks=1 --time=48:00:00 --partition=rtx << ENDINPUT
-#!/bin/bash
-
-cd $PWD
-ibrun "$GPU_PATH" +ppn 16 +pemap 0-7,16-23 +pmepes 7 +devices 0,1 "$CONFIG_FILE" > "$LOG_FILE"
-
-ENDINPUT
+        self.detector = CollisionDetector(protein, lipid, method=collision_detector, **kwargs)
     
-    def check_collisions(self):
-        print('check_collisions')
-
+    def check_collisions(self) -> None:
+        """
+        Main logic of class controlling the flow of collision detection and
+        subsequent repair.
+        """
         clash = True
         while clash:
             clashes = self.detector.query_points()
-            print(clashes)
             if not clashes:
                 break
             
             self.repair_tail_clashes(clashes)
 
     def repair_tail_clashes(self, clashes: List[str]) -> None:
-        print('repair_tail_clashes')
-        
+        """_summary_
+
+        Args:
+            clashes (List[str]): _description_
+
+        Raises:
+            NotImplementedError: _description_
+        """
         c2s, c3s = [], []
 
         
@@ -270,10 +256,6 @@ ENDINPUT
                 atoms_to_rotate = self.get_clash_rotation(tail, tail_length)
                 old_coords = self.lipid.get_coord(atoms_to_rotate)
                 new_coords = self.rotate_tail(old_coords)
-                print(old_coords[2])
-                print(new_coords[0])
-                #print(atoms_to_rotate)
-                #print(self.lipid.pdb_contents)
                 self.lipid.update_coords(atoms_to_rotate[2:], new_coords)
                 self.detector.lipid_coordinates = self.lipid.extract_coordinates()
                 
@@ -291,8 +273,6 @@ ENDINPUT
             List[str]: List whose first two elements correspond to the bond to be rotated,
                 and whose remaining elements are to be actually rotated in cartesian space.
         """
-        print('get_clash_rotation')
-
         tail_type = clashing_atoms[0][:2]
         first_clash = min([int(name[2:]) for name in clashing_atoms])
  
@@ -305,21 +285,31 @@ ENDINPUT
         """
         Performs a rotation about the bond between the first two atoms of `tail_atoms`.
         Units of rotation are in degrees.
+        Args:
+            tail_atoms (np.ndarray): Numpy array of coordinates. First two particles comprise
+                the arbitrary axis to be rotated about.
+            rotate_by (float): Number of degrees to rotate about arbitrary axis.
+        Returns:
+            np.ndarray: Array of transformed coordinates. Shape is (N-2, 3) where N is the 
+                number of rows in the input array `tail_atoms`.
         """
-        print('rotate_tail')
-
         a1, a2, *to_rotate = tail_atoms # unpack into first two atoms and rest of atoms
         vector = a2 - a1
+        print(vector)
         
-        align = Rotation.align_vectors(np.array([0, 0, 1]), vector)[0]
+        align, _ = Rotation.align_vectors(np.array([0, 0, 1]), vector)
         rotate = Rotation.from_euler('z', rotate_by, degrees=True)
-        put_back = Rotation.align_vectors(vector, np.array([0, 0, 1]))[0]
+        put_back = align.inv()
         
-        to_rotate = align.apply(to_rotate)
-        to_rotate = rotate.apply(to_rotate)
-        to_rotate = put_back.apply(to_rotate)
+        print(tail_atoms)
+        tail_atoms = align.apply(tail_atoms - a1)
+        print(tail_atoms)
+        tail_atoms = rotate.apply(tail_atoms)
+        print(tail_atoms)
+        tail_atoms = put_back.apply(tail_atoms) + a1
+        print(tail_atoms)
         
-        return to_rotate
+        return put_back.apply(rotate.apply(align.apply(to_rotate - a1))) + a1
 
     def write_pdb(self):
         self.lipid.write_to_pdb_file(self.lipid.pdb_contents)

@@ -2,7 +2,7 @@
 from copy import deepcopy
 import numpy as np
 from scipy.spatial.transform import Rotation
-from typing import Dict, List, Tuple
+from typing import Dict, List
 from utilities import PDB
 
 class Lipid(PDB):
@@ -18,7 +18,6 @@ class Lipid(PDB):
        super().__init__(pdbfile, [resid], resname=current_restype)
        self.pdb_contents = self.contents
        self.lipid_type = lipid_type
-       #self.protein = self.get_protein_coords()
        self.unmodeled = deepcopy(self.pdb_contents)
        self.collision_detector = None
        self.collision = collision
@@ -86,104 +85,6 @@ class Lipid(PDB):
             
             self.add_to_pdb(new_tail_names, new_tail_coords)
             self.write_to_pdb_file(self.pdb_contents)
-
-    @staticmethod
-    def vectorize(*args) -> List[np.ndarray]:
-        assert len(args)%2 == 0,"ERROR: Must provide even number of points!"
-        vecs = [args[2*x] - args[2*x+1] for x in range(int(len(args)/2))]
-        return [vec/np.linalg.norm(vec) for vec in vecs]
-
-
-    @staticmethod
-    def measure_angle(a: np.ndarray, b: np.ndarray, c: np.ndarray) -> float:
-        v1, v2 = Lipid.vectorize(a, b, c, b)
-        return np.arccos(v1 @ v2)
-
-
-    @staticmethod
-    def measure_dihedral(a: np.ndarray, b: np.ndarray,
-                         c: np.ndarray, d: np.ndarray) -> float:
-        v1, v2, v3 = Lipid.vectorize(b, a, c, b, d, c)
-        norm1 = np.cross(v1, v2)
-        norm2 = np.cross(v2, v3)
-        sign = np.sign(v1 @ v3)
-
-        rad = np.arccos(norm1 @ norm2)
-
-        if sign != 0:
-            rad *= sign
-    
-        return rad * 180 / np.pi
-
-
-    @staticmethod
-    def measure_improper(a: np.ndarray, b: np.ndarray,
-                         c: np.ndarray, d: np.ndarray) -> float:
-        v1, v2, v3 = Lipid.vectorize(a, b, d, b, c, b)
-        plane_normal = np.cross(v1, v2)
-        return 90 - np.arccos(plane_normal @ v3) * 180 / np.pi
-
-    def repair_tail_clashes(self, clashes: List[str]) -> np.ndarray:
-        # MOVE TO NEW REPAIR CLASS
-        #self.pdb_contents
-        c2s, c3s = [], []
-        for clash in clashes:
-            match clash:
-                case 'C2*':
-                    c2s.append(clash)
-                case 'C3*':
-                    c3s.append(clash)
-                case _:
-                    raise NotImplementedError('Clash on non-tail detected!')
-        
-        for tail in [c2s, c3s]:
-            if tail:
-                atoms_to_rotate = self.get_clash_rotation(tail)
-                old_coords = self.get_coord(atoms_to_rotate)
-                new_coords = self.rotate_tail(old_coords)
-                self.update_coordinates(atoms_to_rotate[2:], new_coords)
-                
-
-    @staticmethod
-    def get_clash_rotation(clashing_atoms: List[str]) -> Tuple[List[str], 
-                                                               List[str]]:
-        # MOVE TO NEW REPAIR CLASS
-        tail_type = clashing_atoms[0][:2]
-        first_clash = min([int(name[2:]) for name in clashing_atoms])
-        
-        match tail_type:
-            case 'C2':
-                length = 18
-            case 'C3':
-                length = 16
-            case _:
-                raise ValueError(f'{tail_type=}. This is not a valid tail identifier!')
-            
-        bond_to_rotate = [f'{tail_type}{first_clash - 2}', 
-                          f'{tail_type}{first_clash - 1}']
-        atoms_to_rotate = [f'{tail_type}{i}' for i in range(first_clash, length + 1)]
-        
-        return bond_to_rotate + atoms_to_rotate
-    
-    @staticmethod
-    def rotate_tail(tail_atoms: np.ndarray, rotate_by: float=15.) -> np.ndarray:
-        """
-        Performs a rotation about the bond between the first two atoms of `tail_atoms`.
-        Units of rotation are in degrees.
-        """
-        # MOVE TO NEW REPAIR CLASS
-        a1, a2, to_rotate = tail_atoms
-        vector = a2 - a1
-        
-        align = Rotation.align_vectors(np.array([0, 0, 1]), vector)
-        rotate = Rotation.from_euler('z', rotate_by, degrees=True)
-        put_back = Rotation.align_vector(vector, np.array([0, 0, 1]))
-        
-        align.apply(to_rotate)
-        rotate.apply(to_rotate)
-        put_back.apply(to_rotate)
-        
-        return to_rotate
     
     @staticmethod
     def staple_tail(v1: np.ndarray, v2: np.ndarray, 
@@ -260,17 +161,8 @@ class Lipid(PDB):
             ValueError: _description_
         """
         for (name, coord) in zip(names, coords):
-            
             idx = np.where(np.array(self.pdb_contents, ndmin=2)[:, 2] == name)[0][0]
             self.pdb_contents[idx][6:9] = coord
-
-
-            #for line in self.pdb_contents:
-             #   if line[2] == name:
-              #      line[6:9] = coord
-               #     break
-            #else:
-                #raise ValueError(f'Atom {name} not found in `self.pdb_contents`!')
 
 
 class Template(PDB):
