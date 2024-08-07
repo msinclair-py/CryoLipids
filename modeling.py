@@ -106,6 +106,8 @@ class Lipid(PDB):
     
     def get_terminal_atoms(self):
         """
+        NOTE: Integrate networkx lipid model to identify missing atoms.
+        
         Identify any incompleteness in lipid molecule. Should return
         the terminal headgroup atom, and terminal tail atoms which are
         where template lipids will be attached to complete.
