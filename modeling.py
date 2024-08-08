@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 from copy import deepcopy
+from molecular_graph import MolecularGraph
+import networkx as nx
 import numpy as np
 from scipy.spatial.transform import Rotation
 from typing import Dict, List
@@ -11,13 +13,14 @@ class Lipid(PDB):
     using an input CHARMM IC table and connectivity graph.
     """
     def __init__(self, pdbfile: str, resid: int,
-                    lipid_type: str,
+                    lipid_type: str, lipid_graph: MolecularGraph,
                     current_restype: str = 'POV',
                     collision: int = 0):
 
        super().__init__(pdbfile, [resid], resname=current_restype)
        self.pdb_contents = self.contents
        self.lipid_type = lipid_type
+       self.graph = lipid_graph
        self.unmodeled = deepcopy(self.pdb_contents)
        self.collision_detector = None
        self.collision = collision
@@ -41,8 +44,81 @@ class Lipid(PDB):
             
         self.pdb_contents += lines
         
+    def model(self, rotate_along_z: int=2):
+        """_summary_
+        """
+        # first, find any missing nodes from the lipid graph
+        missing_atoms = self.get_missing_atoms()
+        
+        # second, group missing atoms into continuous chains of atoms which are bonded
+        missing_chains = self.get_missing_chains(missing_atoms)
+        
+        # third, identify vector to align/rotate and coordinates to perform rotation on
+        for missing_chain in missing_chains:
+            prev_atom1, prev_atom2 = self.get_previous_atoms(missing_chain)
+            vector_ref = np.vstack((self.get_coord(prev_atom2), self.get_coord(prev_atom1)))
+            
+            # fourth, staple on each group of missing atoms
+            template_lipid = Template(f'lipids_from_rtf/{self.lipid_type}.pdb', 
+                                      self.lipid_type)
+            coords_to_rotate = template_lipid.atomic_coordinates(missing_chain)
+            vector_align = template_lipid.atomic_coordinates([prev_atom2, prev_atom1])
+            new_tail_coords = self.staple_tail(vector_ref, vector_align, coords_to_rotate)
+            
+            # fifth, align placed group with z-axis
+            if len(missing_chain) > rotate_along_z:
+                new_tail_vec = [new_tail_coords[0, :], new_tail_coords[-1, :]]
+                phosphate_coord = self.get_coord('P')[:, -1] # NOTE: CHECK THIS
+                lipid_center_of_geometry = np.mean(np.concatenate([self.get_coord(self.contents), 
+                                                                   new_tail_coords], axis=1), 
+                                                   axis=1)[:, -1]
+                if lipid_center_of_geometry > phosphate_coord:
+                    z = np.array([0, 0, 1])
+                else:
+                    z = np.array([0, 0, -1])
+                    
+                align_vec = np.vstack((new_tail_vec[0], new_tail_vec[0] + z))
+                new_tail_coords = self.staple_tail(align_vec, new_tail_vec, new_tail_coords)
+                
+                # NEED TO UPDATE internal representation of pdb
+                self.add_to_pdb(missing_chain, new_tail_coords)
+                self.write_to_pdb_file(self.pdb_contents)
+            
+        return 1
+    
+    def get_previous_atoms(self, chain: List[str]) -> Tuple[str]:
+        prev1 = list(self.graph.predecessors(chain[0]))[0]
+        prev2 = list(self.graph.predecessors(prev1))[0]
+        
+        return prev1, prev2
 
-    def model(self):
+    def get_missing_chains(self, missing_atoms: List[str]) -> List[str]:
+        connections = []
+        sort_dict = {val: i for i, val in enumerate(nx.topological_sort(self.graph))}
+        for i, node in enumerate(missing_atoms):
+            if any([node in connect for connect in connections]):
+                continue
+
+            neighbors = list(self.graph.neighbors(node)) + list(self.graph.predecessors(node))
+            
+            other_nodes = deepcopy(missing_atoms)
+            other_nodes.pop(i)
+            current_connections = [node]
+            while True:
+                for j, n in enumerate(other_nodes):
+                    if n in neighbors:
+                        current_connections += [n]
+                        other_nodes.pop(j)
+                        neighbors += list(self.graph.neighbors(n)) + list(self.graph.predecessors(n))
+                        break
+                else:
+                    break
+                
+            connections.append(sorted(current_connections, key=lambda k: sort_dict.get(k)))
+        
+        return connections
+
+    def OLD_model(self):
         """
         Main lipid modeling function. 
         (i) Identifies terminally modeled atoms
@@ -103,8 +179,19 @@ class Lipid(PDB):
         
         return rotmatrix.apply(arr - center) + translation
         
+        
+    def get_missing_atoms(self):
+        """_summary_
+
+        Returns:
+            _type_: _description_
+        """
+        atom_names = [atom[2].strip() for atom in self.contents]
+        missing_atoms = [atom for atom in self.graph.nodes if atom not in atom_names]
+            
+        return missing_atoms
     
-    def get_terminal_atoms(self):
+    def OLD_get_terminal_atoms(self):
         """
         NOTE: Integrate networkx lipid model to identify missing atoms.
         
@@ -195,7 +282,6 @@ class Template(PDB):
             processed[atom[2].strip()] = coord
 
         return processed
-
 
     def atomic_coordinates(self, names: List[str]) -> np.ndarray:
         return np.array([self.heavy[name] for name in names], dtype=np.float64)
