@@ -1,0 +1,12 @@
+source leaprc.protein.ff14SB
+source leaprc.lipid21
+source leaprc.gaff
+# set default PBRadii mbondi2 -> from siddharth
+set default PBRadii mbondi2
+mol = loadpdb test_lipid_amber_noh.pdb
+
+#saveamberparm com vs mol
+# savepdb com pdb_file
+saveamberparm mol test_lipid.prmtop test_lipid.rst7
+
+quit
