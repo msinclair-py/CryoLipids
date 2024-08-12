@@ -7,10 +7,9 @@ import os
 from sys import stdout, exit, stderr
 
 print('Loading CHARMM PDB files ...')
-# inpcrd = AmberInpcrdFile('/home/ss171/micromamba/envs/cryo/share/openmm/examples/input.inpcrd')
-# prmtop = AmberPrmtopFile('/home/ss171/micromamba/envs/cryo/share/openmm/examples/input.prmtop', periodicBoxVectors=inpcrd.boxVectors)
 charmm_input_pdb = 'test_lipid.pdb'
-amber_output_pdb = 'test_lipid_amber.pdb'
+amber_input_pdb = 'test_lipid_amber.pdb'
+
 print('Converting to AMBER PDB files ...')
 
 '''
@@ -38,20 +37,13 @@ command = f'amber4pdb -i {charmm_input_pdb} -o {amber_output_pdb}'
 # Trying to setup system using prmtop/rst7 files
 # do not try to generate prmtop/inpcrd files as they don't seem
 # to provide the information necessary for openmm to start
+
 inpcrd = AmberInpcrdFile('test_lipid.rst7')
 prmtop = AmberPrmtopFile('test_lipid.prmtop')
 forcefield = ForceField('amber14-all.xml', 'implicit/obc2.xml', 'implicit/gbn2.xml')
 
 print('Building system ...')
 system = prmtop.createSystem(constraints=HBonds, implicitSolvent=GBn2)
-# system = prmtop.createSystem(nonbondedMethod=PME, nonbondedCutoff=1*nanometer, constraints=HBonds)
-
-# # Trying to setup system from AMBER formatted pdb
-# pdb = PDBFile('test_lipid_ambpdb.pdb')
-# forcefield = ForceField('amber14-all.xml')
-# system = forcefield.createSystem(pdb.topology, nonbondedMethod=PME,
-#         nonbondedCutoff=1*nanometer, constraints=HBonds, implicitSolvent=OBC2)
-
 integrator = LangevinMiddleIntegrator(300*kelvin, 1/picosecond, 0.004*picoseconds)
 simulation = Simulation(prmtop.topology, system, integrator)
 simulation.context.setPositions(inpcrd.positions)
@@ -69,54 +61,3 @@ simulation.reporters.append(DCDReporter('output.dcd', 1))
 simulation.reporters.append(StateDataReporter(stdout, 5, step=True,
         potentialEnergy=True, temperature=True))
 simulation.step(500)
-
-'''
-### Attempting to implement for charmm files
-
-print('Loading CHARMM files...')
-# params = CharmmParameterSet('toppar/par_all36_cgenff.prm', 
-#                             'toppar/par_all36_lipid.prm', 
-#                             'toppar/toppar_all36_lipid_cholesterol.prm',ls topp
-#                             'toppar/toppar_water_ions.str')
-toppar_dir = 'toppar'                              
-param_files = ['par_all36m_prot.prm',
-               'par_all36_cgenff.prm',
-               'par_all36_lipid.prm',
-               'toppar_all36_lipid_cholesterol_2.str',
-               'toppar_water_ions.str']                                         
-
-param_list = ['%s/%s'%(toppar_dir, param_file) for param_file in param_files]   
-print(param_list)
-params = CharmmParameterSet(*param_list)
-print('Creating CHARMM psf and pdb...')
-psf = CharmmPsfFile('step5_input.psf')
-pdb = PDBFile('step5_input.pdb')
-output_prefix = 'mineq' 
-# make sure n_run_steps is divisible by chk_freq                                
-chk_freq    = 250000                                                            
-dcd_freq    = 5000                                                              
-state_freq  = 5000    
-  
-psf.setBox(64.91400146484375*nanometer, 64.73699951171875*nanometer, 85.90900039672852*nanometer)
-
-print('Creating CHARMM system...')
-system = psf.createSystem(params, \
-                          nonbondedMethod=PME,
-                          nonbondedCutoff=1.2*nanometer,
-                          switchDistance=1.0*nanometer,
-                          constraints=HBonds,
-                          rigidWater=True)
-
-print('Starting engine...')
-integrator = LangevinMiddleIntegrator(300*kelvin, 1/picosecond, 0.004*picoseconds)
-simulation = Simulation(psf.topology, system, integrator)
-simulation.context.setPositions(pdb.positions)
-simulation.minimizeEnergy()
-simulation.reporters.append(DCDReporter('%s.dcd'%(output_prefix), dcd_freq, enforcePeriodic
-    Box=True))
-# simulation.reporters.append(PDBReporter('output.pdb', 1000))
-simulation.reporters.append(StateDataReporter(stdout, 1000, step=True,
-        potentialEnergy=True, temperature=True))
-simulation.step(10000)
-
-'''
