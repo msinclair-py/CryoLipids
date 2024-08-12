@@ -45,7 +45,17 @@ class Lipid(PDB):
         self.pdb_contents += lines
         
     def model(self, rotate_along_z: int=2):
-        """_summary_
+        """
+        Main lipid modeling function. 
+        (i) Identifies terminally modeled atoms
+        (ii) Generates list of what atoms are left to model
+        (iii) Aligns an example of a complete lipid tail based on the 
+            final two modeled atoms
+        (iv) Rotates the newly modeled atoms such that a vector going from 
+            new_atom_0 -> new_atom_n is aligned along the z axis ({0, 0, 1} 
+            or {0, 0, -1} based on whether a majority of atoms are above or 
+            below the phosphorous atom)
+        (v) Store new system coordinates for later extraction
         """
         # first, find any missing nodes from the lipid graph
         missing_atoms = self.get_missing_atoms()
@@ -80,11 +90,7 @@ class Lipid(PDB):
                 align_vec = np.vstack((new_tail_vec[0], new_tail_vec[0] + z))
                 new_tail_coords = self.staple_tail(align_vec, new_tail_vec, new_tail_coords)
                 
-                # NEED TO UPDATE internal representation of pdb
                 self.add_to_pdb(missing_chain, new_tail_coords)
-                self.write_to_pdb_file(self.pdb_contents)
-            
-        return 1
     
     def get_previous_atoms(self, chain: List[str]) -> Tuple[str]:
         prev1 = list(self.graph.predecessors(chain[0]))[0]
