@@ -1,9 +1,11 @@
 package require psfgen
+resetpsf
 
-set RES [lindex $argv 0]
+set RES POPA
+#set RES [lindex $argv 0]
 
-topology /Scr/msincla01/c36/top_all36_lipid.rtf
-topology /Scr/msincla01/c36/toppar_all36_lipid_inositol.str
+topology ../rtf_files/top_all36_lipid.rtf
+topology ../rtf_files/toppar_all36_lipid_inositol.str
 
 segment LIP {
     pdb temp.pdb

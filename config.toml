@@ -1,8 +1,18 @@
 [system]
-name = "misc/bmrcd.pdb"
-resids = [5]
-lipid = "POPC"
+name = 'misc/bmrcd.pdb'
+output = 'test.pdb'
 
-[dynamics]
-enabled = true
-engine = "openmm"
+[minimize]
+vacuum = false
+implicit_solvent = false
+
+[lipids]
+[lipids.0]
+resid = 5
+restype = 'POPC'
+current_resname = 'POV'
+
+[lipids.1]
+resid = 9
+restype = 'POPA'
+current_resname = 'POV'

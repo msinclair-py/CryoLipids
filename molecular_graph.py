@@ -12,7 +12,7 @@ class MolecularGraph:
     """
     def __init__(self, lipid: str):
         edges = self.parse_rtf_file(lipid)
-        self.graph = self.generate_graph(edges)
+        self.G = self.generate_graph(edges)
         
     @staticmethod
     def parse_rtf_file(lipid: str) -> List[str]:
@@ -22,6 +22,8 @@ class MolecularGraph:
             case 'POPC':
                 fname = 'top_all36_lipid.rtf'
             case 'POPG':
+                fname = 'top_all36_lipid.rtf'
+            case 'POPA':
                 fname = 'top_all36_lipid.rtf'
             case _:
                 raise NameError(f'Lipid type {lipid} NOT found in CHARMM forcefield!')

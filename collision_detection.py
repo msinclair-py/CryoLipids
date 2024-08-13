@@ -27,8 +27,6 @@ class CollisionDetector:
             clashes = self.detector.query(self.lipid_coordinates)
         else:
             clashes = self.detector.query(point)
-        
-        print(clashes)
 
         if any(clashes):
             return [line[2] for line in self.raw_lipid[clashes]]
@@ -62,7 +60,6 @@ class OccupancyMap:
         as regularizing the grid space such that it is neatly divisible by
         the `self.grid_spacing` parameter.
         """
-        print(points)
         min_ = np.floor(np.min(points)) - self.pad
         max_ = np.ceil(np.max(points)) + self.pad
         
@@ -77,7 +74,7 @@ class OccupancyMap:
         minx, lenx = self.define_axis(self.points[:, 0])
         miny, leny = self.define_axis(self.points[:, 1])
         minz, lenz = self.define_axis(self.points[:, 2])
-        print(minx, lenx) 
+
         self.mins = [minx, miny, minz]
         self.dims = [int(i / self.grid_spacing) for i in [lenx, leny, lenz]]
         
@@ -297,23 +294,16 @@ class Repairer:
         """
         a1, a2, *to_rotate = tail_atoms # unpack into first two atoms and rest of atoms
         vector = a2 - a1
-        print(vector)
         
         align, _ = Rotation.align_vectors(np.array([0, 0, 1]), vector)
         rotate = Rotation.from_euler('z', rotate_by, degrees=True)
         put_back = align.inv()
         
-        print(tail_atoms)
         tail_atoms = align.apply(tail_atoms - a1)
-        print(tail_atoms)
         tail_atoms = rotate.apply(tail_atoms)
-        print(tail_atoms)
         tail_atoms = put_back.apply(tail_atoms) + a1
-        print(tail_atoms)
         
         return put_back.apply(rotate.apply(align.apply(to_rotate - a1))) + a1
 
-    def write_pdb(self):
-        self.lipid.write_to_pdb_file(self.lipid.pdb_contents)
-
-    
+    def get_new_coords(self):
+        return self.lipid.pdb_contents
