@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from copy import deepcopy
 import os
 from typing import Dict, List, Union
 
@@ -116,16 +117,45 @@ class PDB:
         return fname
                 
     def merge_final_pdb(self, new_coordinates: Dict[str, List[str]]) -> None:
-        """_summary_
+        """
+        Merges protein coordinates with new lipid coordinates. Reindexes all atoms
+        to ensure numerical continuity and renumbers lipid resids to avoid duplicates.
 
         Args:
-            new_coordinates (Dict[str, List[str]]): _description_
-
-        Returns:
-            _type_: _description_
+            new_coordinates (Dict[str, List[str]]): Per lipid coordinates to be concatenated
+                                                        with protein pdb representation
         """
-        with open(f'{self.output_path}/{self.outname}.pdb', 'w') as outfile:
-            pass
+        out_pdb, atom_index = self.renumber(self.protein, atom_idx=1, resid_idx=None)
+        
+        residue_index = 1
+        for val in new_coordinates.values():
+            formatted = [PDB.format_line(line) for line in val]
+            new_lines, atom_index = self.renumber(formatted, 
+                                                  atom_idx=atom_index, 
+                                                  resid_idx=residue_index)
+            out_pdb += new_lines
+            residue_index += 1
+        
+        with open(f'{self.output_path}/{self.outname}', 'w') as outfile:
+            outfile.write(''.join(out_pdb))
+    
+    @staticmethod
+    def renumber(lines: List[str], atom_idx: int, 
+                 resid_idx: Union[None, int] = None) -> tuple():
+        new_lines = []
+        for line in lines:
+            new_line = line[:6]
+            new_line += f'{atom_idx:>5}'
+            if resid_idx is None:
+                new_line += line[11:]
+            else:
+                new_line += line[11:22] + f'{resid_idx:>4}' + line[26:]
+
+            new_lines.append(new_line)
+
+            atom_idx += 1
+        
+        return new_lines, atom_idx
 
 def unpack_lipids(cfg: Dict[str, Dict[str, str]]) -> tuple(List[str]):
     resids, restypes, resnames = list(), list(), list()
