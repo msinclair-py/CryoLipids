@@ -1,8 +1,9 @@
+import networkx as nx
 import numpy as np
 from scipy.optimize import linprog
 from scipy.spatial import Delaunay
 from scipy.spatial.transform import Rotation
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 from modeling import Lipid
 
 class CollisionDetector:
@@ -216,6 +217,7 @@ class Repairer:
                  **kwargs):
         self.lipid = lipid
         self.graph = lipid.graph
+        self.top_sort = {val: i for i, val in enumerate(nx.topological_sort(lipid.graph))}
         self.detector = CollisionDetector(protein, lipid, method=collision_detector, **kwargs)
     
     def check_collisions(self) -> None:
@@ -241,47 +243,37 @@ class Repairer:
         Args:
             clashes (List[str]): Atom names corresponding to atomic clashes
         """
+        if len(clashes) == 1:
+            clashes_to_resolve = clashes
+        else:
+            clashes_to_resolve = []
+            for clash in clashes:
+                ancestors = list(nx.ancestors(self.graph, clash))
+                if any([clash in ancestors for clash in clashes]):
+                    clashes_to_resolve.append(clash)
         
-        
-        c2s, c3s = [], []
-
-        
-        for clash in clashes:
-            if 'C2' in clash:
-                c2s.append(clash)
-            elif 'C3' in clash:
-                c3s.append(clash)
-            else:
-                raise NotImplementedError('Clash on non-tail detected!')
-        
-        for tail, tail_length in zip([c2s, c3s], [18, 16]):
-            if tail:
-                atoms_to_rotate = self.get_clash_rotation(tail, tail_length)
-                old_coords = self.lipid.get_coord(atoms_to_rotate)
-                new_coords = self.rotate_tail(old_coords)
-                self.lipid.update_coords(atoms_to_rotate[2:], new_coords)
-                self.detector.lipid_coordinates = self.lipid.extract_coordinates()
+        for clash in clashes_to_resolve:
+            atoms_to_rotate = self.get_clash_rotation(clash)
+            old_coords = self.lipid.get_coord(atoms_to_rotate)
+            new_coords = self.rotate_tail(old_coords)
+            self.lipid.update_coords(atoms_to_rotate[2:], new_coords)
+            self.detector.lipid_coordinates = self.lipid.extract_coordinates()
                 
-
-    @staticmethod
-    def get_clash_rotation(clashing_atoms: List[str], length: int) -> List[str]:
+    def get_clash_rotation(self, clashing_atom: str) -> List[str]:
         """
         Determines what atoms comprise the bond we need to rotate about, and the
-        rest of the tail atoms which need to be rotated.
+        rest of the remaining atoms which need to be rotated.
         Args:
             clashing_atoms (List[str]): List of atom names which are clashing with protein
-            length (int): Length of lipid tail (18 for SN-1, 16 for SN-2)
 
         Returns:
             List[str]: List whose first two elements correspond to the bond to be rotated,
                 and whose remaining elements are to be actually rotated in cartesian space.
-        """
-        tail_type = clashing_atoms[0][:2]
-        first_clash = min([int(name[2:]) for name in clashing_atoms])
- 
-        atoms_to_rotate = [f'{tail_type}{i}' for i in range(first_clash - 2, length + 1)]
+        """            
+        prev1 = list(self.graph.predecessors(clashing_atom))[0]
+        prev2 = list(self.graph.predecessors(prev1))[0]
         
-        return atoms_to_rotate
+        return [prev2, prev1] + list(nx.descendants(self.graph, prev1))
     
     @staticmethod
     def rotate_tail(arr: np.ndarray, theta: float=15.) -> np.ndarray:
@@ -311,32 +303,6 @@ class Repairer:
         
         R = Rotation.from_matrix(rot_matrix)
         return R.apply(arr[2:] - center) + center
-    
-    @staticmethod
-    def rotate_tail_OLD(tail_atoms: np.ndarray, rotate_by: float=15.) -> np.ndarray:
-        """
-        Performs a rotation about the bond between the first two atoms of `tail_atoms`.
-        Units of rotation are in degrees.
-        Args:
-            tail_atoms (np.ndarray): Numpy array of coordinates. First two particles comprise
-                the arbitrary axis to be rotated about.
-            rotate_by (float): Number of degrees to rotate about arbitrary axis.
-        Returns:
-            np.ndarray: Array of transformed coordinates. Shape is (N-2, 3) where N is the 
-                number of rows in the input array `tail_atoms`.
-        """
-        a1, a2, *to_rotate = tail_atoms # unpack into first two atoms and rest of atoms
-        vector = a2 - a1
-        
-        align, _ = Rotation.align_vectors(np.array([0, 0, 1]), vector)
-        rotate = Rotation.from_euler('z', rotate_by, degrees=True)
-        put_back = align.inv()
-        
-        tail_atoms = align.apply(tail_atoms - a1)
-        tail_atoms = rotate.apply(tail_atoms)
-        tail_atoms = put_back.apply(tail_atoms) + a1
-        
-        return put_back.apply(rotate.apply(align.apply(to_rotate - a1))) + a1
 
     def get_new_coords(self):
         return self.lipid.pdb_contents

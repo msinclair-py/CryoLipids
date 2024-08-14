@@ -14,16 +14,12 @@ class Lipid(PDB):
     """
     def __init__(self, pdbfile: str, resid: int,
                     restype: str,
-                    current_resname: str,
-                    collision: int = 0):
+                    current_resname: str):
 
        super().__init__(pdbfile, '', [resid], old_resnames=current_resname)
        self.lipid_type = restype
        self.pdb_contents = self.lipid_lines
        self.graph = MolecularGraph(restype).G
-       self.unmodeled = deepcopy(self.pdb_contents)
-       self.collision_detector = None
-       self.collision = collision
     
     @property
     def lipid_lines(self) -> List[str]:

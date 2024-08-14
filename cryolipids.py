@@ -20,7 +20,7 @@ protein_coords = [[float(i) for i in line[31:54].strip().split()]
 new_coords = dict()
 for id, lip in config['lipids'].items():
     # read in lipid(s) to be modeled
-    lipid = Lipid(incomplete_lipids, **lip) # MAKE SURE THIS SLICES OUT RESID AND CURRENT_RESTYPE SPECIFICALLY!
+    lipid = Lipid(incomplete_lipids, **lip) 
 
     # model lipid
     lipid.model()
