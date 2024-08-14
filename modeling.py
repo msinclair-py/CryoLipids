@@ -70,7 +70,7 @@ class Lipid(PDB):
             
         self.pdb_contents += lines
         
-    def model(self, rotate_along_z: int=2):
+    def model(self, rotate_along_z: int=2) -> None:
         """
         Main lipid modeling function. 
         (i) Identifies terminally modeled atoms
@@ -107,7 +107,7 @@ class Lipid(PDB):
             
             coords_to_rotate = template_lipid.atomic_coordinates(missing_chain)
             vector_align = template_lipid.atomic_coordinates(prev_atom2 + [prev_atom1])
-            new_tail_coords = self.staple_tail(vector_ref, vector_align, coords_to_rotate)
+            new_tail_coords = self.staple_fragment(vector_ref, vector_align, coords_to_rotate)
             
             # fifth, align placed group with z-axis
             if len(missing_chain) > rotate_along_z:
@@ -123,7 +123,7 @@ class Lipid(PDB):
                     z = np.array([0, 0, -1])
                     
                 align_vec = np.vstack((new_tail_vec[0], new_tail_vec[0] + z))
-                new_tail_coords = self.staple_tail(align_vec, new_tail_vec, new_tail_coords)
+                new_tail_coords = self.staple_fragment(align_vec, new_tail_vec, new_tail_coords)
                 
                 self.add_to_pdb(missing_chain, new_tail_coords)
     
@@ -193,8 +193,8 @@ class Lipid(PDB):
         return connections
     
     @staticmethod
-    def staple_tail(v1: np.ndarray, v2: np.ndarray, 
-                    arr: np.ndarray) -> np.ndarray:
+    def staple_fragment(v1: np.ndarray, v2: np.ndarray, 
+                        fragment: np.ndarray) -> np.ndarray:
         """
         Given the coordinates of the terminal atoms in a given fragment, the
         template coordinates for the same two atoms, and the template coordinates
@@ -208,33 +208,20 @@ class Lipid(PDB):
                                 in our incomplete lipid. 
             v2 (np.ndarray): Array of the coordinates of the same two atoms as
                                 `v1` but coming from the complete, template lipid.
-            arr (np.ndarray): Coordinates of all missing atoms for a given fragment.
+            fragment (np.ndarray): Coordinates of all missing atoms for a given fragment.
                                 Originate from the template lipid.
         
         Returns:
-            np.ndarray: Transformed coordinates of the missing atoms coming from `arr`.
+            np.ndarray: Transformed coordinates of the missing atoms coming from `fragment`.
                             Because the atoms in `v1` should not have moved they are not
                             present in this array
-        """ 
-        c1 = np.mean(v1, axis=0)
-        c2 = np.mean(v2, axis=0)
+        """
+        to_origin = v2[0]
+        from_origin = v1[0]
         
-        v1 -= c1
-        v2 -= c2
+        rotmatrix = Rotation.align_vectors((v1 - v1[0]), (v2 - v2[0]))[0]
         
-        rotmatrix = Rotation.align_vectors(v1 / np.linalg.norm(v1), 
-                                           v2 / np.linalg.norm(v2))[0]
-        
-        return rotmatrix.apply(arr - c2) + c1
-        
-        
-        center = v2[0]
-        translation = v1[0]
-        
-        rotmatrix = Rotation.align_vectors((v1[1] - v1[0]).reshape(1, 3), 
-                                           (v2[1] - v2[0]).reshape(1, 3))[0]
-        
-        return rotmatrix.apply(arr - center) + translation
+        return rotmatrix.apply(fragment - to_origin) + from_origin
         
     def get_missing_atoms(self) -> List[str]:
         """

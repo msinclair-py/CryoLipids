@@ -215,6 +215,7 @@ class Repairer:
                  collision_detector: int=0,
                  **kwargs):
         self.lipid = lipid
+        self.graph = lipid.graph
         self.detector = CollisionDetector(protein, lipid, method=collision_detector, **kwargs)
     
     def check_collisions(self) -> None:
@@ -231,14 +232,17 @@ class Repairer:
             self.repair_tail_clashes(clashes)
 
     def repair_tail_clashes(self, clashes: List[str]) -> None:
-        """_summary_
+        """
+        Repair clash which appears highest in the topological representation
+        of the lipid (C2 is the top atom in the graph). While this may or may
+        not fix clashes which appear lower in the topological heirarchy it is
+        expected that subsequent collision repair will fix these.
 
         Args:
-            clashes (List[str]): _description_
-
-        Raises:
-            NotImplementedError: _description_
+            clashes (List[str]): Atom names corresponding to atomic clashes
         """
+        
+        
         c2s, c3s = [], []
 
         
@@ -280,7 +284,36 @@ class Repairer:
         return atoms_to_rotate
     
     @staticmethod
-    def rotate_tail(tail_atoms: np.ndarray, rotate_by: float=15.) -> np.ndarray:
+    def rotate_tail(arr: np.ndarray, theta: float=15.) -> np.ndarray:
+        """
+        Rotates tail about arbitrary axis defined by first two atoms.
+
+        Args:
+            tail (np.ndarray): Array of atoms to rotate
+            theta (float, optional): Angle to rotate about in degrees, 
+                                        defaults to 15.0
+
+        Returns:
+            np.ndarray: Rotated atoms
+        """
+        center = arr[0]
+        vector = arr[1] - center
+        ux, uy, uz = vector / np.linalg.norm(vector)
+        
+        cos = np.cos(theta)
+        sin = np.sin(theta)
+        
+        rot_matrix = np.array([
+            [cos + ux**2*(1-cos), ux*uy*(1-cos) - uz*sin, ux*uz*(1-cos) + uy*sin],
+            [uy*ux*(1-cos), cos + uy**2*(1-cos), uy*uz*(1-cos) - ux*sin],
+            [uz*ux*(1-cos) - uy*sin, uz*uy*(1-cos) + ux*sin, cos + uz**2*(1-cos)]
+            ])
+        
+        R = Rotation.from_matrix(rot_matrix)
+        return R.apply(arr[2:] - center) + center
+    
+    @staticmethod
+    def rotate_tail_OLD(tail_atoms: np.ndarray, rotate_by: float=15.) -> np.ndarray:
         """
         Performs a rotation about the bond between the first two atoms of `tail_atoms`.
         Units of rotation are in degrees.
