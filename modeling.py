@@ -31,7 +31,12 @@ class Lipid(PDB):
             List[str]: Contents of incompletely modeled lipid for `self.resids[0]` resid
         """
         pdb = open(self.filename).readlines()
-        return self.parse_pdb(pdb, self.resids[0], self.resnames)
+        parsed = self.parse_pdb(pdb, self.resids[0], self.resnames)
+        
+        for i in range(len(parsed)):
+            parsed[i][3] = self.lipid_type
+            
+        return parsed
     
     def extract_coordinates(self) -> np.ndarray:
         """

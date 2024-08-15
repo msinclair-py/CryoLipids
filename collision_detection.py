@@ -204,8 +204,6 @@ class SVO:
 
 class Repairer:
     """
-    NOTE: Incorporate networkx lipid graphs
-    
     Class to orchestrate collision detection and repair. Takes in an instance of
     the `Lipid` class for both its coordinates and a few methods, protein coordinates
     as a numpy array, and an instance of CollisionDetector to perform the actual
@@ -249,7 +247,7 @@ class Repairer:
             clashes_to_resolve = []
             for clash in clashes:
                 ancestors = list(nx.ancestors(self.graph, clash))
-                if any([clash in ancestors for clash in clashes]):
+                if not any([clash in ancestors for clash in clashes]):
                     clashes_to_resolve.append(clash)
         
         for clash in clashes_to_resolve:

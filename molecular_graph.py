@@ -2,6 +2,7 @@
 from copy import deepcopy
 import networkx as nx
 import numpy as np
+import re
 from typing import List
 
 class MolecularGraph:
@@ -16,6 +17,7 @@ class MolecularGraph:
         
     @staticmethod
     def parse_rtf_file(lipid: str) -> List[str]:
+        #pi = re.compile()
         match lipid:
             case 'POPE':
                 fname = 'top_all36_lipid.rtf'
@@ -25,6 +27,8 @@ class MolecularGraph:
                 fname = 'top_all36_lipid.rtf'
             case 'POPA':
                 fname = 'top_all36_lipid.rtf'
+            case 'POPI':
+                fname = 'toppar_all36_lipid_inositol.str'
             case _:
                 raise NameError(f'Lipid type {lipid} NOT found in CHARMM forcefield!')
             

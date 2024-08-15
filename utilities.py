@@ -129,7 +129,7 @@ class PDB:
         
         residue_index = 1
         for val in new_coordinates.values():
-            formatted = [PDB.format_line(line) for line in val]
+            formatted = [PDB.format_line(line) for line in val] # NOT RENAMING RESIDS!
             new_lines, atom_index = self.renumber(formatted, 
                                                   atom_idx=atom_index, 
                                                   resid_idx=residue_index)
