@@ -2,7 +2,7 @@ import openmm as mm
 import openmm.app as app
 from openmm.unit import *
 from openmm.app import *
-from openmm import *
+# from openmm import *
 import os
 from sys import stdout, exit, stderr
 
