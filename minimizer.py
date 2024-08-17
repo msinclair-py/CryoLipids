@@ -51,45 +51,52 @@ class VacuumSimulator:
         self.ts = timestep
         self.platform = platform # need to do a gpu check here
         self.solvent = None # allows us to inherit methods more cleanly
-        self.tleap_conf = 
-        self.tleap_log =
         self.rst7 = ''
         self.prmtop = ''
+        self.tleap_conf = ''
 
         # Convert CHARMM lipid naming to AMBER convention
-        command = f'charmmlipid2amber.py -i {self.charmm_structure} \
-                    -o {output}/renamed_lipids.pdb'
+        commands = [f"charmmlipid2amber.py -i {self.charmm_structure} -o {output}/renamed_lipids.pdb",
+                    f"pdb4amber -i {output}/renamed_lipids.pdb -o {output}/amber_format.pdb",
+                    f"sed -i 's/{{prmtop_file}}/{self.prmtop}/' {self.tleap_conf}", 
+                    f"sed -i 's/{{rst7_file}}/{self.rst7}/' {self.tleap_conf}"]
         try:
-            subprocess.run(command, shell=True, capture_output=True, text=True)
+            subprocess.run(command[0], shell=True, capture_output=True, text=True)
         except:
             print('Fixme -- write a specific exception')
 
         # Convert CHARMM PDB file to AMBER formatting
-        command = f'pdb4amber -i {output}/renamed_lipids.pdb -o {output}/amber_format.pdb'
         try:
-            subprocess.run(command, shell=True, capture_output=True, text=True)
+            subprocess.run(commands[1], shell=True, capture_output=True, text=True)
         except:
             print('Fixme -- write a specific exception')
 
+        subprocess.run(command[2], shell=True, capture_output=True, text=True)
+        subprocess.run(command[3], shell=True, capture_output=True, text=True)
         # Generate inpcrd and rst7 files with tleap
         # files are named amber_lipids.{inpcrd,prmtop}
         command = f'tleap -s -f {self.tleap_conf} > {self.tleap_log}'
-
-    def set_integrator(self):
-        rst7 = AmberInpcrdFile(self.rst7)
+        
+        
+    def minimize(self):
+        inpcrd = AmberInpcrdFile(self.rst7)
         prmtop = AmberPrmtopFile(self.prmtop)
-        if self.solvent is not None:
-            forcefield = ForceField(*self.forcefield, self.solvent)
-        else:
+        if self.solvent is None:
             forcefield = ForceField(self.forcefield, 'implicit/gbn2.xml')
+        else:
+            forcefield = ForceField(*self.forcefield, self.solvent)
 
-        # nonbonded method 
-        # self.system = forcefield.createSystem(pdb.topology, nonbondedMethod=self.nonbondedMethod,
-        #                                       constraints=self.constraints)
-        self.system = prmtop.createSystem(constraints=self.constraints, implicitSolvent=GBn2)
-        self.integrator = mm.LangevinMiddleIntegrator(self.temp, self.collision_freq, self.ts)
-        self.topology = prmtop.topology
-        self.init_pos = inpcrd.positions
+        system = prmtop.createSystem(constraints=HBonds, implicitSolvent=GBn2)
+        integrator = LangevinMiddleIntegrator(self.temp, self.collision_freq, self.timestep)
+        simulation = Simulation(prmtop.topology, system, integrator)
+        simulation.context.setPositions(inpcrd.positions)
+        simulation.minimizeEnergy()
+
+        # Test write PDB to ensure that the minimize method is not killing my PDB coordinates
+        # openmm github thread: https://github.com/openmm/openmm/issues/3635
+        with open('minimized.pdb', 'w') as output:
+            state = simulation.context.getState(getPositions=True, getEnergy=True)
+            PDBFile.writeFile(simulation.topology, state.getPositions(), output)
         
     def minimize(self, positions):
         self.set_integrator()
