@@ -118,6 +118,7 @@ class VacuumSimulator:
         
     @staticmethod
     def write_to_pdb(top, positions, out):
+        # openmm github thread: https://github.com/openmm/openmm/issues/3635
         with open(out, 'w') as outfile:
             app.pdbfile.PDBFile.writeFile(top, positions, outfile)
       
