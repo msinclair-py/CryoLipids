@@ -71,8 +71,10 @@ class VacuumSimulator:
         except:
             print('Fixme -- write a specific exception')
 
+        # alter tleap_conf to name rst7, prmtop files appropriately
         subprocess.run(command[2], shell=True, capture_output=True, text=True)
         subprocess.run(command[3], shell=True, capture_output=True, text=True)
+        
         # Generate inpcrd and rst7 files with tleap
         # files are named amber_lipids.{inpcrd,prmtop}
         command = f'tleap -s -f {self.tleap_conf} > {self.tleap_log}'
