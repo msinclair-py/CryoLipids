@@ -5,6 +5,7 @@ from openmm.app import *
 from openmm import *
 import os
 from sys import stdout, exit, stderr
+import subprocess
 
 class VacuumSimulator:
     """
@@ -51,9 +52,9 @@ class VacuumSimulator:
         self.ts = timestep
         self.platform = platform # need to do a gpu check here
         self.solvent = None # allows us to inherit methods more cleanly
-        self.rst7 = ''
-        self.prmtop = ''
-        self.tleap_conf = ''
+        self.rst7 = 'amber_file.rst7'
+        self.prmtop = 'amber_file.prmtop'
+        self.tleap_conf = 'tleap.in'
 
         # Convert CHARMM lipid naming to AMBER convention
         commands = [f"charmmlipid2amber.py -i {self.charmm_structure} -o {output}/renamed_lipids.pdb",
@@ -62,14 +63,14 @@ class VacuumSimulator:
                     f"sed -i 's/{{rst7_file}}/{self.rst7}/' {self.tleap_conf}"]
         try:
             subprocess.run(command[0], shell=True, capture_output=True, text=True)
-        except:
-            print('Fixme -- write a specific exception')
+        except Exception as e:
+            print(f'Fixme -- write a specific exception: {e}')
 
         # Convert CHARMM PDB file to AMBER formatting
         try:
             subprocess.run(commands[1], shell=True, capture_output=True, text=True)
-        except:
-            print('Fixme -- write a specific exception')
+        except Exception as e:
+            print(f'Fixme -- write a specific exception: {e}')
 
         # alter tleap_conf to name rst7, prmtop files appropriately
         subprocess.run(command[2], shell=True, capture_output=True, text=True)
@@ -77,8 +78,11 @@ class VacuumSimulator:
         
         # Generate inpcrd and rst7 files with tleap
         # files are named amber_lipids.{inpcrd,prmtop}
-        command = f'tleap -s -f {self.tleap_conf} > {self.tleap_log}'
-        
+        try:
+            command = f'tleap -s -f {self.tleap_conf} > {self.tleap_log}'
+        except:
+            print('Fixme -- write a specific exception')
+
         
     def minimize(self):
         inpcrd = AmberInpcrdFile(self.rst7)

@@ -1,0 +1,10 @@
+source leaprc.protein.ff14SB
+source leaprc.lipid21
+source leaprc.gaff
+
+set default PBRadii mbondi2
+mol = loadpdb amber_format.pdb
+
+saveamberparm mol prmtop_file rst7_file
+
+quit

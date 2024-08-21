@@ -1,7 +1,10 @@
+import networkx as nx
 import numpy as np
 from scipy.optimize import linprog
 from scipy.spatial import Delaunay
-from typing import List, Tuple
+from scipy.spatial.transform import Rotation
+from typing import Dict, List, Tuple
+from modeling import Lipid
 
 class CollisionDetector:
     """
@@ -10,7 +13,7 @@ class CollisionDetector:
     sparse voxel octree algorithms. These are more well described in the 
     corresponding docstrings for each class below.
     """
-    def __init__(self, protein: np.ndarray, lipid: np.ndarray, 
+    def __init__(self, protein: np.ndarray, lipid: Lipid, 
                  method: int=0, **kwargs):
         if not isinstance(protein, np.ndarray):
             protein = np.array(protein)
@@ -21,11 +24,11 @@ class CollisionDetector:
         self.detector = methods[method](protein, **kwargs)
         
     def query_points(self, point: None=None) -> List[bool]:
-        if point is not None:
-            clashes = self.detector.query(point)
-        else:
+        if point is None:
             clashes = self.detector.query(self.lipid_coordinates)
-        
+        else:
+            clashes = self.detector.query(point)
+
         if any(clashes):
             return [line[2] for line in self.raw_lipid[clashes]]
         else:
@@ -45,7 +48,7 @@ class OccupancyMap:
     grid_spacing (float): spacing of grid in Angstroms
     pad (int): padding to apply in Angstroms
     """
-    def __init__(self, points: np.ndarray, grid_spacing: float=1.,
+    def __init__(self, points: np.ndarray, grid_spacing: float=1.5,
                  pad: int=1):
         self.points = points
         self.grid_spacing = grid_spacing
@@ -61,8 +64,8 @@ class OccupancyMap:
         min_ = np.floor(np.min(points)) - self.pad
         max_ = np.ceil(np.max(points)) + self.pad
         
-        len_ = max_ - min_
-        regularized_len = len_ + self.grid_spacing - len_ % self.grid_spacing
+        len_ = max_ - min_ + self.grid_spacing
+        regularized_len = len_ - len_ % self.grid_spacing
         return min_, regularized_len
     
     def define_bounds(self) -> None:
@@ -72,7 +75,7 @@ class OccupancyMap:
         minx, lenx = self.define_axis(self.points[:, 0])
         miny, leny = self.define_axis(self.points[:, 1])
         minz, lenz = self.define_axis(self.points[:, 2])
-        
+
         self.mins = [minx, miny, minz]
         self.dims = [int(i / self.grid_spacing) for i in [lenx, leny, lenz]]
         
@@ -198,3 +201,106 @@ class SVO:
             
     def query(self, point: np.ndarray) -> bool:
         return self.octree.query(point)
+
+class Repairer:
+    """
+    Class to orchestrate collision detection and repair. Takes in an instance of
+    the `Lipid` class for both its coordinates and a few methods, protein coordinates
+    as a numpy array, and an instance of CollisionDetector to perform the actual
+    collision detection.
+    """
+    def __init__(self, lipid: Lipid, 
+                 protein: np.ndarray, 
+                 collision_detector: int=0,
+                 **kwargs):
+        self.lipid = lipid
+        self.graph = lipid.graph
+        self.top_sort = {val: i for i, val in enumerate(nx.topological_sort(lipid.graph))}
+        self.detector = CollisionDetector(protein, lipid, method=collision_detector, **kwargs)
+    
+    def check_collisions(self) -> None:
+        """
+        Main logic of class controlling the flow of collision detection and
+        subsequent repair.
+        """
+        clash = True
+        while clash:
+            clashes = self.detector.query_points()
+            if not clashes:
+                break
+            
+            self.repair_tail_clashes(clashes)
+
+    def repair_tail_clashes(self, clashes: List[str]) -> None:
+        """
+        Repair clash which appears highest in the topological representation
+        of the lipid (C2 is the top atom in the graph). While this may or may
+        not fix clashes which appear lower in the topological heirarchy it is
+        expected that subsequent collision repair will fix these.
+
+        Args:
+            clashes (List[str]): Atom names corresponding to atomic clashes
+        """
+        if len(clashes) == 1:
+            clashes_to_resolve = clashes
+        else:
+            clashes_to_resolve = []
+            for clash in clashes:
+                ancestors = list(nx.ancestors(self.graph, clash))
+                if not any([clash in ancestors for clash in clashes]):
+                    clashes_to_resolve.append(clash)
+        
+        for clash in clashes_to_resolve:
+            atoms_to_rotate = self.get_clash_rotation(clash)
+            old_coords = self.lipid.get_coord(atoms_to_rotate)
+            new_coords = self.rotate_tail(old_coords)
+            self.lipid.update_coords(atoms_to_rotate[2:], new_coords)
+            self.detector.lipid_coordinates = self.lipid.extract_coordinates()
+                
+    def get_clash_rotation(self, clashing_atom: str) -> List[str]:
+        """
+        Determines what atoms comprise the bond we need to rotate about, and the
+        rest of the remaining atoms which need to be rotated.
+        Args:
+            clashing_atoms (List[str]): List of atom names which are clashing with protein
+
+        Returns:
+            List[str]: List whose first two elements correspond to the bond to be rotated,
+                and whose remaining elements are to be actually rotated in cartesian space.
+        """            
+        prev1 = list(self.graph.predecessors(clashing_atom))[0]
+        prev2 = list(self.graph.predecessors(prev1))[0]
+        
+        return [prev2, prev1] + list(nx.descendants(self.graph, prev1))
+    
+    @staticmethod
+    def rotate_tail(arr: np.ndarray, theta: float=15.) -> np.ndarray:
+        """
+        Rotates tail about arbitrary axis defined by first two atoms.
+
+        Args:
+            tail (np.ndarray): Array of atoms to rotate
+            theta (float, optional): Angle to rotate about in degrees, 
+                                        defaults to 15.0
+
+        Returns:
+            np.ndarray: Rotated atoms
+        """
+        center = arr[0]
+        vector = arr[1] - center
+        ux, uy, uz = vector / np.linalg.norm(vector)
+        
+        cos = np.cos(theta)
+        sin = np.sin(theta)
+        
+        rot_matrix = np.array([
+            [cos + ux**2*(1-cos), ux*uy*(1-cos) - uz*sin, ux*uz*(1-cos) + uy*sin],
+            [uy*ux*(1-cos), cos + uy**2*(1-cos), uy*uz*(1-cos) - ux*sin],
+            [uz*ux*(1-cos) - uy*sin, uz*uy*(1-cos) + ux*sin, cos + uz**2*(1-cos)]
+            ])
+        
+        R = Rotation.from_matrix(rot_matrix)
+        return R.apply(arr[2:] - center) + center
+
+    def get_new_coords(self):
+        return self.lipid.pdb_contents
