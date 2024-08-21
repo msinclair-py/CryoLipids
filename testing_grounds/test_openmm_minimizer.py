@@ -29,7 +29,7 @@ obvious to me.
 - 
 '''
 # Construct the command using f-strings
-command = f'amber4pdb -i {charmm_input_pdb} -o {amber_output_pdb}'
+command = f'pdb4amber -i {charmm_input_pdb} -o {amber_output_pdb}'
 
 # Run the command
 # result = subprocess.run(command, shell=True, capture_output=True, text=True)

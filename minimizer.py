@@ -55,7 +55,9 @@ class VacuumSimulator:
         self.rst7 = 'amber_file.rst7'
         self.prmtop = 'amber_file.prmtop'
         self.tleap_conf = 'tleap.in'
-
+        self.minimized_output = '' # is set in the minimize method
+    
+    def vacuum_prep(self):
         # Convert CHARMM lipid naming to AMBER convention
         commands = [f"charmmlipid2amber.py -i {self.charmm_structure} -o {output}/renamed_lipids.pdb",
                     f"pdb4amber -i {output}/renamed_lipids.pdb -o {output}/amber_format.pdb",
@@ -88,11 +90,13 @@ class VacuumSimulator:
         inpcrd = AmberInpcrdFile(self.rst7)
         prmtop = AmberPrmtopFile(self.prmtop)
         if self.solvent is None:
-            forcefield = ForceField(self.forcefield, 'implicit/gbn2.xml')
+            # forcefield = ForceField(self.forcefield, 'implicit/gbn2.xml')
+            system = prmtop.createSystem(constraints=HBonds, implicitSolvent=GBn2) # vacuum
         else:
-            forcefield = ForceField(*self.forcefield, self.solvent)
+            # forcefield = ForceField(*self.forcefield, self.solvent)
+            system = prmtop.createSystem(constraints=HBonds, implicitSolvent=GBn2) # implicit solvent
 
-        system = prmtop.createSystem(constraints=HBonds, implicitSolvent=GBn2)
+        # system = prmtop.createSystem(constraints=HBonds, implicitSolvent=GBn2)
         integrator = LangevinMiddleIntegrator(self.temp, self.collision_freq, self.timestep)
         simulation = Simulation(prmtop.topology, system, integrator)
         simulation.context.setPositions(inpcrd.positions)
@@ -100,31 +104,12 @@ class VacuumSimulator:
 
         # Test write PDB to ensure that the minimize method is not killing my PDB coordinates
         # openmm github thread: https://github.com/openmm/openmm/issues/3635
-        with open('minimized.pdb', 'w') as output:
+        self.minimized_output = 'minimized.pdb'
+        with open(self.minimized_output, 'w') as output:
             state = simulation.context.getState(getPositions=True, getEnergy=True)
             PDBFile.writeFile(simulation.topology, state.getPositions(), output)
         
-    def minimize(self, positions):
-        self.set_integrator()
-        mm.Platform.getPlatformByName(self.platform)
-        simulation = app.Simulation(self.topology, self.system, self.integrator)
-        simulation.context.setPositions(positions)
-        simulation.minimizeEnergy()
-        
-        self.write_to_pdb(simulation.topology, 
-                          simulation.context.getState(getPositions=True).getPositions(),
-                          os.path.join(self.output, 'min.pdb'))
-    
-    def propagate_dynamics(self, positions, n_steps, out_name, save_rate, velocities=None):
-        self.set_integrator()
-        mm.Platform.getPlatformByName(self.platform)
-        simulation = app.Simulation(self.topology, self.system, self.integrator)
-        simulation.context.setPositions(positions)
-        if velocities:
-            simulation.setVelocities(velocities)
-        simulation.reporters.append(app.DCDReporter(out_name, save_rate))
-        simulation.step(n_steps)
-        
+        # Write out final minimized structure
         self.write_to_pdb(simulation.topology,
                           simulation.context.getState(getPositions=True).getPositions(),
                           os.path.join(self.output, out_name))
@@ -150,3 +135,15 @@ class ImplicitSolventSimulator(VacuumSimulator):
         super().__init__(structure, output, forcefield, temp, press, nonbondedMethod,
                  constraints, collision_freq, timestep, platform)
         self.solvent = solvent
+        self.rst7 = '' # should be output of vacuum class above
+    # SELFNOTE: FIXME
+    def propagate_dynamics(self, positions, n_steps, out_name, save_rate, velocities=None):
+        self.set_integrator()
+        mm.Platform.getPlatformByName(self.platform)
+        simulation = app.Simulation(self.topology, self.system, self.integrator)
+        simulation.context.setPositions(positions)
+        if velocities:
+            simulation.setVelocities(velocities)
+        simulation.reporters.append(app.DCDReporter(out_name, save_rate))
+        simulation.step(n_steps)
+        
