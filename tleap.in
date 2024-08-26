@@ -3,8 +3,8 @@ source leaprc.lipid21
 source leaprc.gaff
 
 set default PBRadii mbondi2
-mol = loadpdb amber_format.pdb
+mol = loadpdb {amber_format}
 
-saveamberparm mol amber_lipids.prmtop amber_lipids.rst7
+saveamberparm mol {prmtop_file} {rst7_file}
 
 quit
