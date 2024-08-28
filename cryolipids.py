@@ -24,6 +24,8 @@ for id, lip in config['lipids'].items():
 
     # model lipid
     lipid.model()
+    
+    print(lipid.pdb_contents)
 
     # check for atomic clashes and repair accordingly
     repair = Repairer(lipid, protein_coords, grid_spacing=1.5)

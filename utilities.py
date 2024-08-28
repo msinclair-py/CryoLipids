@@ -50,9 +50,11 @@ class PDB:
         parsed = []
         for line in pdbcontents:
             if int(line[_r0:_r1].strip()) == resid and line[_r2:_r3].strip() == resname:
-                if 'H' not in line[_n0:_n1]:
-                    parsed.append([line[x:y].strip() for x, y in _pdb_info.values()])
-                    parsed[-1][0] = 'ATOM' # explicitly convert to ATOM here
+                parsed.append([line[x:y].strip() for x, y in _pdb_info.values()])
+                parsed[-1][0] = 'ATOM' # explicitly convert to ATOM here
+                #if 'H' not in line[_n0:_n1]:
+                #    parsed.append([line[x:y].strip() for x, y in _pdb_info.values()])
+                #    parsed[-1][0] = 'ATOM' # explicitly convert to ATOM here
 
         return parsed
 

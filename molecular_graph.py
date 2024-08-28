@@ -53,8 +53,9 @@ class MolecularGraph:
             i = 0
             while i < n:
                 bond = bond_line[i*2:(i+1)*2]
-                if not any(['H' in ele for ele in bond]):
-                    bonds.append((bond))
+                bonds.append((bond))
+                #if not any(['H' in ele for ele in bond]):
+                #    bonds.append((bond))
                 i += 1
                 
         return np.array(bonds, ndmin=2)

@@ -11,8 +11,3 @@ implicit_solvent = false
 resid = 5
 restype = 'POPC'
 current_resname = 'POV'
-
-[lipids.1]
-resid = 9
-restype = 'POPA'
-current_resname = 'POV'
