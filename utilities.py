@@ -86,13 +86,20 @@ class PDB:
             
         new_line += f'{line[3]:<4}{line[4]}{line[5]:>4}    '
         new_line += f'{float(line[6]):>8.3f}{float(line[7]):>8.3f}{float(line[8]):>8.3f}'
-        return f'{"".join(new_line)}\n'
+        new_line += f'{float(line[9]):>6.2f}{float(line[10]):>6.2f}\n'
+
+        return new_line
     
     @property
     def protein(self):
         lines = [line for line in open(self.filename, 'r').readlines() 
                  if 'ATOM' == line[:4]]
-        prot = [line for line in lines if any(aa in line for aa in self.aa)]
+        
+        prot = []
+        for line in lines:
+            if any(aa in line for aa in self.aa):
+                prot.append(line[:60] + '  1.00' + ' ' * 12 + '\n')
+
         return prot
     
     @property
@@ -113,8 +120,9 @@ class PDB:
         
         with open(fname, 'w') as outfile:
             for line in contents:
-                outline = PDB.format_line(line)
-                outfile.write(outline)
+                if 'H' not in line[2]:
+                    outline = self.format_line(line)
+                    outfile.write(outline)
                 
         return fname
                 
@@ -128,13 +136,15 @@ class PDB:
                                                         with protein pdb representation
         """
         out_pdb, atom_index = self.renumber(self.protein, atom_idx=1, resid_idx=None)
-        
+
         residue_index = 1
         for val in new_coordinates.values():
-            formatted = [PDB.format_line(line) for line in val] # NOT RENAMING RESIDS!
+            formatted = [self.format_line(line) for line in val]
+
             new_lines, atom_index = self.renumber(formatted, 
                                                   atom_idx=atom_index, 
                                                   resid_idx=residue_index)
+            
             out_pdb += new_lines
             residue_index += 1
         

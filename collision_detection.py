@@ -302,5 +302,33 @@ class Repairer:
         R = Rotation.from_matrix(rot_matrix)
         return R.apply(arr[2:] - center) + center
 
-    def get_new_coords(self):
-        return self.lipid.pdb_contents
+    def get_new_coords(self) -> List[str]:
+        """
+        Obtains both the new coordinates for `self.lipid`, and also a binary
+        assignment for atoms to fix in energy minimization/implicit equilibration.
+
+        Returns:
+            np.ndarray: Array of shape (N, 4) where the first 3 columns are x, y, z and
+                        the last column is a 1 or 0 which indicates it should be fixed
+                        or not respectively.
+        """
+        pdb_lines = self.lipid.pdb_contents
+        fixed = self.get_fixed(pdb_lines)
+        for pdb_line, value in zip(pdb_lines, fixed):
+            pdb_line[-1] = value
+            
+        return pdb_lines
+    
+    def get_fixed(self, lines: List[str]) -> List[int]:
+        """
+        Identify which atoms should be fixed by comparing to the original PDB.
+        
+        Args:
+            coords (List[str]): The new lines of what will ultimately be our
+                                output PDB.
+
+        Returns:
+            np.ndarray: A vector corresponding to which atom indices will be fixed.
+        """
+        original_atoms = [line[2] for line in self.lipid.lipid_lines]
+        return [1 if line[2] in original_atoms else 0 for line in lines]

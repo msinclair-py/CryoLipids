@@ -46,7 +46,7 @@ class MolecularGraph:
             if dump:
                 if line[:4] == 'BOND' or line[:6] == 'DOUBLE':
                     bond_lines.append(line[6:].strip().split())
-                    
+        
         bonds = []
         for bond_line in bond_lines:
             n = len(bond_line) // 2
@@ -54,8 +54,6 @@ class MolecularGraph:
             while i < n:
                 bond = bond_line[i*2:(i+1)*2]
                 bonds.append((bond))
-                #if not any(['H' in ele for ele in bond]):
-                #    bonds.append((bond))
                 i += 1
                 
         return np.array(bonds, ndmin=2)

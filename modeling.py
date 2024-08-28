@@ -15,7 +15,6 @@ class Lipid(PDB):
     def __init__(self, pdbfile: str, resid: int,
                     restype: str,
                     current_resname: str):
-        print(pdbfile, resid, restype)
         super().__init__(pdbfile, '', [resid], old_resnames=current_resname)
         self.lipid_type = restype
         self.pdb_contents = self.lipid_lines
@@ -125,7 +124,7 @@ class Lipid(PDB):
                     
                 align_vec = np.vstack((new_tail_vec[0], new_tail_vec[0] + z))
                 new_tail_coords = self.staple_fragment(align_vec, new_tail_vec, new_tail_coords)
-                
+            
             self.add_to_pdb(missing_chain, new_tail_coords)
     
     def get_previous_atoms(self, chain: List[str]) -> List[str]:
@@ -231,11 +230,9 @@ class Lipid(PDB):
 
         Returns:
             List[str]: Names of the missing atoms
-        """
+        """ 
         atom_names = [atom[2].strip() for atom in self.pdb_contents]
         missing_atoms = [atom for atom in self.graph.nodes if atom not in atom_names]
-        print(f'{atom_names=}')
-        print(f'{missing_atoms=}')
             
         return missing_atoms
         
