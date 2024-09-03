@@ -151,7 +151,7 @@ class Lipid(PDB):
                 prev2 += ['C3']
         else:
             prev2 = list(self.graph.predecessors(prev1))
-            
+           
         return [prev1] + prev2
 
     def get_missing_chains(self, missing_atoms: List[str]) -> List[List[str]]:

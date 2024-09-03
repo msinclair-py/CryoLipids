@@ -332,3 +332,4 @@ class Repairer:
         """
         original_atoms = [line[2] for line in self.lipid.lipid_lines]
         return [1 if line[2] in original_atoms else 0 for line in lines]
+
