@@ -1,0 +1,45 @@
+# Log started on 07/19/2024 [mm/dd/yyyy] at 17:55:35
+chamber
+chamber step5_input.psf
+?chamber
+env
+setenv
+set
+chamber -psf step5_input.psf
+chamber -psf step5_input.psf -prm /home/ss171/0-Projects/01-par/par_all36_cgenff.prm -prm /home/ss171/0-Projects/01-par/par_all36_lipid.prm -prm /home/ss171/0-Projects/01-par/toppar_all36_lipid_cholesterol_2.str -prm /home/ss171/0-Projects/01-par/par_all36m_prot.prm -str /home/ss171/0-Projects/01-par/toppar_water_ions.str -crd step5_input.pdb
+chamber -psf step5_input.psf -param /home/ss171/0-Projects/01-par/par_all36_cgenff.prm -param /home/ss171/0-Projects/01-par/par_all36_lipid.prm -param /home/ss171/0-Projects/01-par/toppar_all36_lipid_cholesterol_2.str -param /home/ss171/0-Projects/01-par/par_all36m_prot.prm -str /home/ss171/0-Projects/01-par/toppar_water_ions.str -crd step5_input.pdb
+chamber -psf step5_input.psf -param /home/ss171/0-Projects/01-par/par_all36_cgenff.prm -param /home/ss171/0-Projects/01-par/par_all36_lipid.prm -str /home/ss171/0-Projects/01-par/toppar_all36_lipid_cholesterol_2.str -param /home/ss171/0-Projects/01-par/par_all36m_prot.prm -str /home/ss171/0-Projects/01-par/toppar_water_ions.str -crd step5_input.pdb
+ls
+chamber -psf step5_input.psf -param /home/ss171/0-Projects/01-par/par_all36_cgenff.prm -param /home/ss171/0-Projects/01-par/par_all36_lipid.prm -str /home/ss171/0-Projects/01-par/toppar_all36_lipid_cholesterol_2.str -param /home/ss171/0-Projects/01-par/par_all36m_prot.prm -str /home/ss171/0-Projects/01-par/toppar_water_ions.str -crd step5_input.pdb -nocmap
+ls
+vi parmed.log
+# Log started on 07/19/2024 [mm/dd/yyyy] at 18:12:06
+chamber -psf step5_input.psf -crd step5_input.pdb -param /home/ss171/0-Projects/01-par/par_all36_cgenff.prm -param /home/ss171/0-Projects/01-par/par_all36_lipid.prm -str /home/ss171/0-Projects/01-par/toppar_all36_lipid_cholesterol_2.str -param /home/ss171/0-Projects/01-par/par_all36m_prot.prm -str /home/ss171/0-Projects/01-par/toppar_water_ions.str -nocmap
+ls
+?parmed
+?chamber
+?
+changeLJ14Pair
+help
+shell
+# Log started on 07/19/2024 [mm/dd/yyyy] at 18:25:32
+shell -e
+# Log started on 07/19/2024 [mm/dd/yyyy] at 18:25:45
+shell -e bash
+# Log started on 07/19/2024 [mm/dd/yyyy] at 18:27:13
+# Command line arguments: -O
+
+# Log started on 07/20/2024 [mm/dd/yyyy] at 17:27:46
+chamber -psf step5_input_charmm.psf -param /home/ss171/0-Projects/01-par/par_all36_cgenff.prm -param /home/ss171/0-Projects/01-par/par_all36_lipid.prm -param /home/ss171/0-Projects/01-par/par_all36m_prot.prm -str /home/ss171/0-Projects/01-par/toppar_all36_lipid_cholesterol_2.str -str /home/ss171/0-Projects/01-par/toppar_water_ions.str -crd step5_input.pdb
+ls
+chamber -psf step5_input_charmm.psf -param /home/ss171/0-Projects/01-par/par_all36_cgenff.prm -param /home/ss171/0-Projects/01-par/par_all36_lipid.prm -param /home/ss171/0-Projects/01-par/par_all36m_prot.prm -str /home/ss171/0-Projects/01-par/toppar_all36_lipid_cholesterol_2.str -str /home/ss171/0-Projects/01-par/toppar_water_ions.str -crd step5_input.pdb -O tester
+chamber -psf step5_input_charmm.psf -param /home/ss171/0-Projects/01-par/par_all36_cgenff.prm -param /home/ss171/0-Projects/01-par/par_all36_lipid.prm -param /home/ss171/0-Projects/01-par/par_all36m_prot.prm -str /home/ss171/0-Projects/01-par/toppar_all36_lipid_cholesterol_2.str -str /home/ss171/0-Projects/01-par/toppar_water_ions.str -crd step5_input.pdb -o
+?chamber
+pwd
+exit
+exit
+# Log started on 07/20/2024 [mm/dd/yyyy] at 17:41:27
+chamber -psf step5_input_charmm.psf -param /home/ss171/0-Projects/01-par/par_all36_cgenff.prm -param /home/ss171/0-Projects/01-par/par_all36_lipid.prm -param /home/ss171/0-Projects/01-par/par_all36m_prot.prm -str /home/ss171/0-Projects/01-par/toppar_all36_lipid_cholesterol_2.str -str /home/ss171/0-Projects/01-par/toppar_water_ions.str -crd step5_input.coor
+ls
+exit()
+quit

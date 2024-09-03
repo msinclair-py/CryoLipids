@@ -1,45 +1,47 @@
 #!/usr/bin/env python
-from collision_detection import CollisionDetector
-from minimizer import VacuumSimulator, ImplicitSolventSimulator
+from collision_detection import Repairer
+from minimizer import Simulator
 from modeling import Lipid
-from utilities import PDB
+from utilities import PDB, unpack_lipids
 import tomllib
 
 config = tomllib.load(open('config.toml','rb'))
+input_name = config['system']['name']
+output_name = config['system']['output']
 
-# DELETE THIS LATER
-structure = 'toy_models/model1.pdb'
-#
+lipid_resids, lipid_types, modeled_resnames = unpack_lipids(config)
 
 # read in cryo em model file and process
-pdb = PDB('misc/bmrcd.pdb', [5])
-pdb.write_to_pdb_file(pdb.contents)
-
-# read in lipid(s) to be modeled
-lipid = Lipid(structure, 
-              5, 'POPC',
-              current_restype='POV')
-
-# model lipid
-lipid.model()
-
-# check for protein conflict; octree?
-protein_coords = [[float(i) for i in line[32:54].strip().split()] 
+pdb = PDB(input_name, output_name, lipid_resids, modeled_resnames)
+incomplete_lipids = pdb.write_to_pdb_file(pdb.contents)
+protein_coords = [[float(i) for i in line[31:54].strip().split()] 
                   for line in pdb.protein]
 
-collision_detector = CollisionDetector(protein_coords, 
-                                       lipid, 
-                                       method=0)
+new_coords = dict()
+for id, lip in config['lipids'].items():
+    # read in lipid(s) to be modeled
+    lipid = Lipid(incomplete_lipids, **lip) 
 
-collisions = collision_detector.query_points()
-print(collisions)
+    # model lipid
+    lipid.model()
 
-# fix conflict
-if any(collisions):
-    pass
+    # check for atomic clashes and repair accordingly
+    repair = Repairer(lipid, protein_coords, grid_spacing=1.5)
+    repair.check_collisions()
+    new_coords[id] = repair.get_new_coords()
 
-# do vacuum minimization
-minimizer = VacuumSimulator(f'processed_{name}.pdb')
-
-# do implicit solvent minimization and relaxation
-minimizer = ImplicitSolventSimulator('vacuum_min.pdb')
+# output final static model
+pdb.merge_final_pdb(new_coords)
+shashank_test = 'shashank_lipid_test.pdb'
+if config['minimize']['vacuum']:
+    # do vacuum minimization
+    # minimizer = VacuumSimulator(f'{output_name}.pdb')
+    print(f'working on file: {shashank_test}')
+    minimizer = Simulator(f'{shashank_test}')
+    minimizer.prep()
+    minimizer.minimize()
+    
+    if config['minimize']['implicit_solvent']:
+        # do implicit solvent minimization and relaxation
+        # minimizer = ImplicitSolventSimulator('vacuum_min.pdb')
+        minimizer.minimize(solvent='implicit')
