@@ -1,9 +1,0 @@
-system:
-  name = "misc/bmrcd.pdb"
-  resids = [5]
-  lipid = "POPC"
-
-dynamics:
-  enabled = True
-  engine = "openmm" # choices: openmm, namd
-  binary = None # filepath to namd binary if using

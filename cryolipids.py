@@ -32,6 +32,7 @@ for id, lip in config['lipids'].items():
 
 # output final static model
 pdb.merge_final_pdb(new_coords)
+
 shashank_test = 'shashank_lipid_test.pdb'
 if config['minimize']['vacuum']:
     # do vacuum minimization

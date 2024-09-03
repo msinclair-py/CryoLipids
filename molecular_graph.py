@@ -1,244 +1,88 @@
 #!/usr/bin/env python
 from copy import deepcopy
-from itertools import combinations
+import networkx as nx
 import numpy as np
-from typing import Dict, List, Set, Tuple
+import re
+from typing import List
 
 class MolecularGraph:
+    """_summary_
+
+    Returns:
+        _type_: _description_
     """
-    Collection of undirected graph methods for graph construction and traversal of atomic 
-    information in rtf files. Intended for performing path matching and fragment library
-    generation.
-    """
-    
-    def __init__(self, rtf: Dict[str, Dict[str, float]], lipid: str):
-        self._rtfs = rtf
-        self._lipid = lipid
-
-
-    @property
-    def root(self) -> str:
-        """
-        Root node for given lipids to obtain the longest path through each
-        molecule.
-        """
-        roots = {'POPE': 'N',
-                 'POPC': 'C15',
-                 'POPG': 'OC3',
-                 'POPS': 'O13A',
-                 'POPA': 'O12'}
-
-        return roots[self._lipid]
-
-
-    @property
-    def branches(self) -> Dict[str, List[str]]:
-        """
-        Returns atoms where branching occurs in the longest continuous path
-        through each given lipid molecule.
-        """
-        lip = {'C2': ['C3', 'O31'] + [f'C3{n}' for n in range(1, 17)],
-               'P': ['O13', 'O14'],
-               'C21': ['O22'],
-               'C31': ['O32']}
+    def __init__(self, lipid: str):
+        edges = self.parse_rtf_file(lipid)
+        self.G = self.generate_graph(edges)
         
-        pc, pg, ps = [deepcopy(lip) for _ in range(3)]
-        pc.update({'N': ['C13', 'C14']})
-        pg.update({'C12': ['OC2']})
-        ps.update({'C12': ['N']})
-
-        branch_residues = {
-                'POPE': lip,
-                'POPC': pc,
-                'POPG': pg,
-                'POPS': ps,
-                'POPA': lip
-                }
-
-        return branch_residues[self._lipid]
-
-
     @staticmethod
-    def sliding_window(vec: List[str], n: int) -> List[List[str]]:
-        """
-        Create list of lists where each list corresponds to full sliding window sweep of
-        size `k` where 3 <= k <= n.
-        """
-        windows = []
-        for i in range(len(vec) - n + 1):
-            windows.append(vec[i:i+n])
-
-        return windows
-
-
-    def complete_library(self,
-            fragments: Dict[int, List[List[str]]]) -> Dict[int, List[List[str]]]:
-        """
-        Take fragments from longest pathway in structure and divergent paths (sn-2 tail, phosphate
-        oxygens, etc.) to generate full fragment library.
-        """
-        ###### NOTE: This should be refactored for efficiency
-        branch_map = self.branches
-        for atom, frags in branch_map.items():
-            matches = []
-            for p in fragments.values():
-                for v in p:
-                    if atom in v:
-                        matches.append(v)
-
-            match atom:
-                case 'C2':
-                    new_paths = [frags[:n] for n in range(1, len(frags) + 1)]
-                case 'P' | 'N':
-                    new_paths = [[frag] for frag in frags] + [frags]
-                case _:
-                    new_paths = [frags] if isinstance(frags[0], str) else frags
-           
-            new_frags = dict()
-            for m in matches:
-                for p in new_paths:
-                    temp = deepcopy(m)
-                    temp.extend(p)
-                    
-                    try:
-                        if temp not in new_frags[len(temp)]:
-                            new_frags[len(temp)].append(temp)
-                    except KeyError:
-                        new_frags[len(temp)] = [temp]
+    def parse_rtf_file(lipid: str) -> List[str]:
+        #pi = re.compile()
+        match lipid:
+            case 'POPE':
+                fname = 'top_all36_lipid.rtf'
+            case 'POPC':
+                fname = 'top_all36_lipid.rtf'
+            case 'POPG':
+                fname = 'top_all36_lipid.rtf'
+            case 'POPA':
+                fname = 'top_all36_lipid.rtf'
+            case 'POPI':
+                fname = 'toppar_all36_lipid_inositol.str'
+            case _:
+                raise NameError(f'Lipid type {lipid} NOT found in CHARMM forcefield!')
             
-            for length, path in new_frags.items():
-                for p in path:
-                    try:
-                        fragments[length].append(p)
-                    except KeyError:
-                        fragments[length] = [p]
-
-        return fragments
-
-
-    def fragment_lipid(self, longest_path: List[str]) -> Dict[int, List[List[str]]]:
-        """
-        Take longest pathway through structure and obtain all fragments of size 3:N. Pass
-        this initial fragment library to `complete_library` to obtain the full fragment
-        library for the lipid type of instantiated class.
-        """
-        fragments = dict()
-        for n in range(3, len(longest_path)):
-            fragments[n] = self.sliding_window(longest_path, n)
+        rtf = open(f'rtf_files/{fname}').readlines()
         
-        return self.complete_library(fragments)
-
-
-    def dfs(self, node: str, path: List[str] = None, 
-            visited: Set[str] = set()) -> List[str]:
-        """
-        Recursive depth-first search algorithm. Returns list of all identified
-        paths in `graph`.
-        """
-        if not path: path = [node]
-        visited.add(node)
-
-        paths = []
-        for tail in self._graph[node]:
-            if tail not in visited:
-                tail_path = path + [tail]
-                paths.append(tail_path)
-                paths.extend(self.dfs(tail, tail_path, visited))
-
-        return paths
-
-    
-    @property
-    def longest_path(self):
-        """
-        Performs dfs and then returns the longest pathway.
-        """
-        paths = self.dfs(self.root, visited=set())
-        longest = tuple()
-        for path in paths:
-            if len(path) > len(longest):
-                longest = path
-
-        return longest
-
-
-    @staticmethod
-    def generate_graph(rtf_dict: Dict[str,float]) -> Dict[str, Set[str]]:
-        graph = {}
-        for key in rtf_dict['bond'].keys():
-            a1, a2 = key.split('-')
-            if not any(['H' in a for a in (a1, a2)]):
-                try:
-                    graph[a1].add(a2)
-                except KeyError:
-                    graph.update({a1: {a2}})
-
-                try:
-                    graph[a2].add(a1)
-                except KeyError:
-                    graph.update({a2: {a1}})
-
-        return graph
-
-
-    def generate_edges(self, graph: Dict[str, Set[str]]):
-        edges = []
-        for node in graph:
-            for neighbor in graph[node]:
-                if not any(x in edges for x in [{node, neighbor}, 
-                                                {neighbor, node}]):
-                    edges.append({node, neighbor})
-
-        self._edges = edges
-
-
-    @property
-    def connectivity_graphs(self) -> Dict[str, Dict[str, str]]:
-        graph = self.generate_graph(self._rtfs[self._lipid])
-        self.generate_edges(graph)
-        
-        self._graph = graph
-        return graph
-
-
-    def get_coords(self, fragment: List[str]) -> np.ndarray:
-        coords = np.array([])
-        for line in self._rtfs[self._lipid]['bond']:
-            print(line)
-        return coords
-
-
-class SparseVoxelOctree:
-    def __init__(self, root, depth):
-        self.root = root
-        self.depth = depth
-    
-    def insert(self, point):
-        node = self.root
-        for i in range(self.depth):
-            bit = (point[i] >> (self.depth - 1 - i)) & 1
-            if node.children[bit] is None:
-                node.children[bit] = SparseVoxelOctreeNode()
-            node = node.children[bit]
-        
-    def query(self, point):
-        node = self.root
-        for i in range(self.depth):
-            bit = (point[i] >> (self.depth - 1 - i)) & 1
-            if node.children[bit] is None:
-                return False
-            node = node.children[bit]
-        return True
-    
-class SparseVoxelOctreeNode:
-    def __init__(self):
-        self.children = [None] * 8
-        
-class SVO:
-    def __init__(self, points, depth):
-        self.octree = SparseVoxelOctree(SparseVoxelOctreeNode(), depth)
-        for point in points:
-            self.octree.insert(point)
+        bond_lines = []
+        dump = False
+        for line in rtf:
+            if dump and line[:4] == 'RESI':
+                break
             
-    def query(self, point):
-        return self.octree.query(point)
+            if line[:9] == f'RESI {lipid}':
+                dump = True
+                
+            if dump:
+                if line[:4] == 'BOND' or line[:6] == 'DOUBLE':
+                    bond_lines.append(line[6:].strip().split())
+        
+        bonds = []
+        for bond_line in bond_lines:
+            n = len(bond_line) // 2
+            i = 0
+            while i < n:
+                bond = bond_line[i*2:(i+1)*2]
+                bonds.append((bond))
+                i += 1
+                
+        return np.array(bonds, ndmin=2)
+    
+    def generate_graph(self, bonds: np.ndarray) -> None:
+        parent_nodes = ['C2']
+        G = nx.DiGraph()
+        G.add_node(parent_nodes[0])
+
+        while True:
+            new_nodes = []
+            for parent_node in parent_nodes:
+                
+                idxs = np.where(bonds == parent_node)
+                for (idx, j) in zip(idxs[0], idxs[1]):
+                    jdx = abs(j - 1)
+                    # identify atom that is not parent_node
+                    new_atom = bonds[idx, jdx]
+                    # add new edge
+                    G.add_edge(parent_node, new_atom)
+                    # populate new nodes list
+                    new_nodes.append(new_atom)
+                
+                # remove bond(s) from bonds array
+                bonds = np.delete(bonds, idxs[0], axis=0)
+
+            if not new_nodes:
+                break
+            else:
+                parent_nodes = deepcopy(new_nodes)
+        
+        return G

@@ -161,29 +161,3 @@ class Simulator:
             PDBFile.writeFile(self.simulation.topology, state.getPositions(), output)
             self.simulation.saveState('implicit_run.xml')
 
-# class ImplicitSolventSimulator(Simulator):
-#     """
-#     Simulation object for implicit solvent simulation. Defaults to GBN2
-#     implicit solvent. For other options see OpenMM documentation:
-#     """
-#     def __init__(self, structure, output=os.getcwd(),
-#                  forcefield='amber14/protein.ff14SB.xml', 
-#                  temp=300 * kelvin, press=1 * bar, nonbondedMethod=app.NoCutoff, 
-#                  constraints=app.HBonds, collision_freq=1 / picosecond,
-#                  timestep=0.002 * picosecond, platform='CUDA', 
-#                  solvent='implicit/gbn2.xml'):
-#         super().__init__(structure, output, forcefield, temp, press, nonbondedMethod,
-#                  constraints, collision_freq, timestep, platform)
-#         self.solvent = solvent
-#         self.rst7 = '' # should be output of vacuum class above
-#     # SELFNOTE: FIXME
-#     def propagate_dynamics(self, positions, n_steps, out_name, save_rate, velocities=None):
-#         self.set_integrator()
-#         mm.Platform.getPlatformByName(self.platform)
-#         simulation = app.Simulation(self.topology, self.system, self.integrator)
-#         simulation.context.setPositions(positions)
-#         if velocities:
-#             simulation.setVelocities(velocities)
-#         simulation.reporters.append(app.DCDReporter(out_name, save_rate))
-#         simulation.step(n_steps)
-        
