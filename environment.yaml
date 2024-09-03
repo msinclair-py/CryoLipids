@@ -123,4 +123,3 @@ dependencies:
       - scikit-tda==1.0.0
       - tadasets==0.0.4
       - wrapt==1.14.1
-prefix: /opt/anaconda3/envs/cryo
