@@ -3,11 +3,11 @@ import openmm.app as app
 from openmm.unit import *
 from openmm.app import *
 from openmm import *
-import os
+import os, shutil, tempfile
 from sys import stdout, exit, stderr
 import subprocess
 
-class VacuumSimulator:
+class Simulator:
     """
     Simulation object which performs vacuum minimization. Can optionally tune any
     simulation parameters; however, the default settings should be appropriate for
@@ -40,7 +40,7 @@ class VacuumSimulator:
                  forcefield=['amber14-all.xml', 'amber14/protein.ff14SB.xml'], 
                  temp=300 * kelvin, press=1 * bar, nonbondedMethod=app.NoCutoff, 
                  constraints=app.HBonds, collision_freq=1 / picosecond,
-                 timestep=0.002 * picosecond, platform='CUDA'):
+                 timestep=0.002 * picosecond, platform='CUDA', solvent=None):
         self.charmm_structure = structure
         self.output = output
         self.forcefield = forcefield
@@ -51,99 +51,113 @@ class VacuumSimulator:
         self.collision_freq = collision_freq
         self.ts = timestep
         self.platform = platform # need to do a gpu check here
-        self.solvent = None # allows us to inherit methods more cleanly
+        self.solvent = solvent # allows us to inherit methods more cleanly
         self.rst7 = 'amber_file.rst7'
         self.prmtop = 'amber_file.prmtop'
-        self.tleap_conf = 'tleap.in'
-        self.minimized_output = '' # is set in the minimize method
+        self.tleap_template = 'tleap.in'
+        self.amber_tmp_file = 'amber_format.pdb'
+        # self.output = '' # this is for all output in commands list
+        # self.minimized = 'minimize_run.pdb'
+        # self.vacuumed = 'vacuum_run.pdb'
+        # self.implicited = 'implicit_run.pdb'
+        self.simulation = None # use this to access simulation object
     
-    def vacuum_prep(self):
+    def prep(self):
         # Convert CHARMM lipid naming to AMBER convention
-        commands = [f"charmmlipid2amber.py -i {self.charmm_structure} -o {output}/renamed_lipids.pdb",
-                    f"pdb4amber -i {output}/renamed_lipids.pdb -o {output}/amber_format.pdb",
-                    f"sed -i 's/{{prmtop_file}}/{self.prmtop}/' {self.tleap_conf}", 
-                    f"sed -i 's/{{rst7_file}}/{self.rst7}/' {self.tleap_conf}"]
-        try:
-            subprocess.run(command[0], shell=True, capture_output=True, text=True)
-        except Exception as e:
-            print(f'Fixme -- write a specific exception: {e}')
-
+        commands = [f"charmmlipid2amber.py -i {self.charmm_structure} -o renamed_lipids.pdb",
+                    f"pdb4amber -i renamed_lipids.pdb -o {self.amber_tmp_file}"]
+        
         # Convert CHARMM PDB file to AMBER formatting
-        try:
-            subprocess.run(commands[1], shell=True, capture_output=True, text=True)
-        except Exception as e:
-            print(f'Fixme -- write a specific exception: {e}')
-
-        # alter tleap_conf to name rst7, prmtop files appropriately
-        subprocess.run(command[2], shell=True, capture_output=True, text=True)
-        subprocess.run(command[3], shell=True, capture_output=True, text=True)
+        subprocess.run(commands[0], shell=True, capture_output=True, text=True)
+        subprocess.run(commands[1], shell=True, capture_output=True, text=True)
         
-        # Generate inpcrd and rst7 files with tleap
-        # files are named amber_lipids.{inpcrd,prmtop}
-        try:
-            command = f'tleap -s -f {self.tleap_conf} > {self.tleap_log}'
-        except:
-            print('Fixme -- write a specific exception')
-
+        # Create a temporary file
+        with tempfile.NamedTemporaryFile(delete=True, mode='w+', suffix='.tleap') as temp_file:
+            self.tleap_conf = temp_file.name
+            
+            # Read the original tleap file and replace placeholders
+            with open(self.tleap_template, 'r') as original_file:
+                content = original_file.read()
+                content = content.replace('{amber_format}', self.amber_tmp_file)
+                content = content.replace('{prmtop_file}', self.prmtop)
+                content = content.replace('{rst7_file}', self.rst7)
+            
+            # Write the modified content to the temporary file
+            temp_file.write(content)
+            temp_file.flush()  # Ensure content is written to disk
         
-    def minimize(self):
+            # Use the modified temporary file with tleap within the block
+            try:
+                command = f'tleap -s -f {self.tleap_conf} > tleap.log'
+                subprocess.run(command, shell=True, capture_output=True, text=True)
+            except Exception as e:
+                print(f'Error running tleap: {e}')
+        
+        # The temporary file is automatically deleted after the with block ends
+        print('\n Prep done :) \n')
+        
+    def minimize(self, solvent=None):
+
+        self.solvent = solvent 
+        
         inpcrd = AmberInpcrdFile(self.rst7)
         prmtop = AmberPrmtopFile(self.prmtop)
+        
         if self.solvent is None:
-            # forcefield = ForceField(self.forcefield, 'implicit/gbn2.xml')
-            system = prmtop.createSystem(constraints=HBonds, implicitSolvent=GBn2) # vacuum
-        else:
+            system = prmtop.createSystem(constraints=HBonds)
+
+            integrator = LangevinMiddleIntegrator(self.temp, self.collision_freq, self.ts)
+            self.simulation = Simulation(prmtop.topology, system, integrator)
+            self.simulation.context.setPositions(inpcrd.positions)
+            self.simulation.minimizeEnergy()
+            
+            with open('vacuum_minimized.pdb', 'w') as output:
+                state = self.simulation.context.getState(getPositions=True, getEnergy=True)
+                PDBFile.writeFile(self.simulation.topology, state.getPositions(), output)
+                self.simulation.saveState('vacuum_minimized.xml')
+
+            print('\n Vacuum minimizer done :) \n')
+
+        elif solvent == 'implicit':
             # forcefield = ForceField(*self.forcefield, self.solvent)
             system = prmtop.createSystem(constraints=HBonds, implicitSolvent=GBn2) # implicit solvent
 
-        # system = prmtop.createSystem(constraints=HBonds, implicitSolvent=GBn2)
-        integrator = LangevinMiddleIntegrator(self.temp, self.collision_freq, self.timestep)
-        simulation = Simulation(prmtop.topology, system, integrator)
-        simulation.context.setPositions(inpcrd.positions)
-        simulation.minimizeEnergy()
+            integrator = LangevinMiddleIntegrator(self.temp, self.collision_freq, self.ts)
+            self.simulation = Simulation(prmtop.topology, system, integrator)
+            self.simulation.loadState('vacuum_minimized.xml')
+            self.simulation.context.setPositions(inpcrd.positions)
+            self.simulation.minimizeEnergy()
 
+            with open('implicit_minimized.pdb', 'w') as output:
+                state = self.simulation.context.getState(getPositions=True, getEnergy=True)
+                PDBFile.writeFile(self.simulation.topology, state.getPositions(), output)
+                self.simulation.saveState('implicit_minimized.xml')
+            print('\n Implicit minimizer done :) \n')
+
+
+    def vacuum_run(self):
+        self.simulation.reporters.append(DCDReporter('vacuum.dcd', 1000))
+        self.simulation.reporters.append(StateDataReporter(stdout, 1000, step=True,
+                potentialEnergy=True, temperature=True))
+        self.simulation.step(10000)
+        
         # Test write PDB to ensure that the minimize method is not killing my PDB coordinates
         # openmm github thread: https://github.com/openmm/openmm/issues/3635
-        self.minimized_output = 'minimized.pdb'
-        with open(self.minimized_output, 'w') as output:
-            state = simulation.context.getState(getPositions=True, getEnergy=True)
-            PDBFile.writeFile(simulation.topology, state.getPositions(), output)
+        with open('vacuumed.pdb', 'w') as output:
+            state = self.simulation.context.getState(getPositions=True, getEnergy=True)
+            PDBFile.writeFile(self.simulation.topology, state.getPositions(), output)
+            self.simulation.saveState('vacuum_run.xml')
+            
+    def implicit_run(self):
+        self.simulation.reporters.append(DCDReporter('implicit.dcd', 1000))
+        self.simulation.reporters.append(StateDataReporter(stdout, 1000, step=True,
+                potentialEnergy=True, temperature=True))
+        self.simulation.step(10000)
         
-        # Write out final minimized structure
-        self.write_to_pdb(simulation.topology,
-                          simulation.context.getState(getPositions=True).getPositions(),
-                          os.path.join(self.output, out_name))
-        
-    @staticmethod
-    def write_to_pdb(top, positions, out):
+        # Test write PDB to ensure that the minimize method is not killing my PDB coordinates
         # openmm github thread: https://github.com/openmm/openmm/issues/3635
-        with open(out, 'w') as outfile:
-            app.pdbfile.PDBFile.writeFile(top, positions, outfile)
-      
-        
-class ImplicitSolventSimulator(VacuumSimulator):
-    """
-    Simulation object for implicit solvent simulation. Defaults to GBN2
-    implicit solvent. For other options see OpenMM documentation:
-    """
-    def __init__(self, structure, output=os.getcwd(),
-                 forcefield='charmm36.xml', temp=300 * kelvin, 
-                 press=1 * bar, nonbondedMethod=app.NoCutoff, 
-                 constraints=app.HBonds, collision_freq=1 / picosecond,
-                 timestep=0.002 * picosecond, platform='CUDA', 
-                 solvent='implicit/gbn2.xml'):
-        super().__init__(structure, output, forcefield, temp, press, nonbondedMethod,
-                 constraints, collision_freq, timestep, platform)
-        self.solvent = solvent
-        self.rst7 = '' # should be output of vacuum class above
-    # SELFNOTE: FIXME
-    def propagate_dynamics(self, positions, n_steps, out_name, save_rate, velocities=None):
-        self.set_integrator()
-        mm.Platform.getPlatformByName(self.platform)
-        simulation = app.Simulation(self.topology, self.system, self.integrator)
-        simulation.context.setPositions(positions)
-        if velocities:
-            simulation.setVelocities(velocities)
-        simulation.reporters.append(app.DCDReporter(out_name, save_rate))
-        simulation.step(n_steps)
-        
+        with open('implicited.pdb', 'w') as output:
+            state = self.simulation.context.getState(getPositions=True, getEnergy=True)
+            PDBFile.writeFile(self.simulation.topology, state.getPositions(), output)
+            self.simulation.saveState('implicit_run.xml')
+

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from collision_detection import Repairer
-from minimizer import VacuumSimulator, ImplicitSolventSimulator
+from minimizer import Simulator
 from modeling import Lipid
 from utilities import PDB, unpack_lipids
 import tomllib
@@ -33,10 +33,16 @@ for id, lip in config['lipids'].items():
 # output final static model
 pdb.merge_final_pdb(new_coords)
 
+shashank_test = 'shashank_lipid_test.pdb'
 if config['minimize']['vacuum']:
     # do vacuum minimization
-    minimizer = VacuumSimulator(f'static_{output_name}.pdb')
-
+    # minimizer = VacuumSimulator(f'{output_name}.pdb')
+    print(f'working on file: {shashank_test}')
+    minimizer = Simulator(f'{shashank_test}')
+    minimizer.prep()
+    minimizer.minimize()
+    
     if config['minimize']['implicit_solvent']:
         # do implicit solvent minimization and relaxation
-        minimizer = ImplicitSolventSimulator('vacuum_min.pdb')
+        # minimizer = ImplicitSolventSimulator('vacuum_min.pdb')
+        minimizer.minimize(solvent='implicit')
