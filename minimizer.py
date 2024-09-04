@@ -1,4 +1,5 @@
-import openmm as mm
+#import openmm as mm
+import numpy as np
 import openmm.app as app
 from openmm.unit import *
 from openmm.app import *
@@ -56,13 +57,15 @@ class Simulator:
         self.prmtop = 'amber_file.prmtop'
         self.tleap_template = 'tleap.in'
         self.amber_tmp_file = 'amber_format.pdb'
-        # self.output = '' # this is for all output in commands list
-        # self.minimized = 'minimize_run.pdb'
-        # self.vacuumed = 'vacuum_run.pdb'
-        # self.implicited = 'implicit_run.pdb'
+        self.fixed_atoms = []
         self.simulation = None # use this to access simulation object
-    
+   
     def prep(self):
+        # Create an array of indices for fixed atoms using beta column from charmm pdb input
+        with open(self.charmm_structure) as file_in:
+            beta_values = [line[54:60].strip() for line in file_in]
+            self.fixed_atoms = np.array(beta_values, dtype=float)
+ 
         # Convert CHARMM lipid naming to AMBER convention
         commands = [f"charmmlipid2amber.py -i {self.charmm_structure} -o renamed_lipids.pdb",
                     f"pdb4amber -i renamed_lipids.pdb -o {self.amber_tmp_file}"]
@@ -94,6 +97,7 @@ class Simulator:
                 print(f'Error running tleap: {e}')
         
         # The temporary file is automatically deleted after the with block ends
+        
         print('\n Prep done :) \n')
         
     def minimize(self, solvent=None):
@@ -105,6 +109,11 @@ class Simulator:
         
         if self.solvent is None:
             system = prmtop.createSystem(constraints=HBonds)
+            
+            #fix atoms
+            for atom_index, value in enumerate(self.fixed_atoms):
+                if value==1:
+                    system.setParticleMass(atom_index, value)
 
             integrator = LangevinMiddleIntegrator(self.temp, self.collision_freq, self.ts)
             self.simulation = Simulation(prmtop.topology, system, integrator)
@@ -121,6 +130,11 @@ class Simulator:
         elif solvent == 'implicit':
             # forcefield = ForceField(*self.forcefield, self.solvent)
             system = prmtop.createSystem(constraints=HBonds, implicitSolvent=GBn2) # implicit solvent
+
+            #fix atoms
+            for atom_index, value in enumerate(self.fixed_atoms):
+                if value==1:
+                    system.setParticleMass(atom_index, value)
 
             integrator = LangevinMiddleIntegrator(self.temp, self.collision_freq, self.ts)
             self.simulation = Simulation(prmtop.topology, system, integrator)

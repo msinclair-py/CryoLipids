@@ -12,22 +12,29 @@ output_name = config['system']['output']
 lipid_resids, lipid_types, modeled_resnames = unpack_lipids(config)
 
 # read in cryo em model file and process
+print('Starting setup for modeling lipids')
 pdb = PDB(input_name, output_name, lipid_resids, modeled_resnames)
 incomplete_lipids = pdb.write_to_pdb_file(pdb.contents)
 protein_coords = [[float(i) for i in line[31:54].strip().split()] 
                   for line in pdb.protein]
 
 new_coords = dict()
+
+# modeling individual lipids
+print('Modeling lipids individually')
 for id, lip in config['lipids'].items():
+    print(id)
     # read in lipid(s) to be modeled
     lipid = Lipid(incomplete_lipids, **lip) 
-
+    print('test 1')
     # model lipid
     lipid.model()
-
+    print('test 2')
     # check for atomic clashes and repair accordingly
     repair = Repairer(lipid, protein_coords, grid_spacing=1.5)
+    print('repaired')
     repair.check_collisions()
+    print('no collisions')
     new_coords[id] = repair.get_new_coords()
 
 # output final static model
