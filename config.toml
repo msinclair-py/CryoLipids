@@ -3,8 +3,8 @@ name = 'misc/bmrcd.pdb'
 output = 'test.pdb'
 
 [minimize]
-vacuum = true
-implicit_solvent = true
+vacuum = false
+implicit_solvent = false
 
 [lipids]
 [lipids.0]
