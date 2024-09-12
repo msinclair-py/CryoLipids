@@ -96,20 +96,20 @@ class Lipid(PDB):
         # second, group missing atoms into continuous chains of atoms which are bonded
         missing_chains = self.get_missing_chains(missing_atoms)
         
+        template_lipid = Template(f'lipids_from_rtf/{self.lipid_type}.pdb', 
+                                  self.lipid_type)
+
         # third, identify vector to align/rotate and coordinates to perform rotation on
         for missing_chain in missing_chains:
             prev_atom1, *prev_atom2 = self.get_previous_atoms(missing_chain)
             vector_ref = np.vstack((self.get_coord(prev_atom2), self.get_coord(prev_atom1)))
             
             # fourth, staple on each group of missing atoms
-            template_lipid = Template(f'lipids_from_rtf/{self.lipid_type}.pdb', 
-                                      self.lipid_type)
-            
             coords_to_rotate = template_lipid.atomic_coordinates(missing_chain)
             vector_align = template_lipid.atomic_coordinates(prev_atom2 + [prev_atom1])
             new_tail_coords = self.staple_fragment(vector_ref, vector_align, coords_to_rotate)
             
-            # fifth, align placed group with z-axis
+            # fifth, align placed group with z-axis if longer than cutoff length
             if len(missing_chain) > rotate_along_z:
                 new_tail_vec = np.vstack((new_tail_coords[0, :], new_tail_coords[-1, :]))
                 

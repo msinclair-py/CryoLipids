@@ -2,9 +2,13 @@
 name = 'misc/bmrcd.pdb'
 output = 'test.pdb'
 
+[repair]
+theta = 15.0
+min_attempts = 24
+
 [minimize]
-vacuum = false
-implicit_solvent = false
+vacuum = true
+implicit_solvent = true
 
 [lipids]
 [lipids.0]

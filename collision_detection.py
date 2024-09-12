@@ -211,25 +211,52 @@ class Repairer:
     """
     def __init__(self, lipid: Lipid, 
                  protein: np.ndarray, 
+                 theta: float=15.,
+                 clash_tolerance: int=24,
                  collision_detector: int=0,
                  **kwargs):
         self.lipid = lipid
         self.graph = lipid.graph
         self.top_sort = {val: i for i, val in enumerate(nx.topological_sort(lipid.graph))}
         self.detector = CollisionDetector(protein, lipid, method=collision_detector, **kwargs)
+        self.theta = theta
+        self.clash_tolerance = max(int(360. / theta), clash_tolerance)
     
     def check_collisions(self) -> None:
         """
         Main logic of class controlling the flow of collision detection and
         subsequent repair.
+
+        Args:
+            theta (float): Number of degrees to rotate clashes for repair.
+            clash_tolerance (int): Min. number of clash repair attempts before
+                            exiting due to lack of convergence.
+
+        Returns:
+            [int]: Success value, 1 means successful repair, 0 means repair has
+                not converged indicating energy minimization is strictly required 
+                to fix protein-lipid system.
         """
-        clash = True
-        while clash:
+
+        clash_counter = 0
+        is_repaired = True
+        while True:
             clashes = self.detector.query_points()
             if not clashes:
                 break
             
+            clash_counter += 1
+
+            if clash_counter > self.clash_tolerance:
+                is_repaired = False
+                break
+
             self.repair_tail_clashes(clashes)
+
+        if is_repaired:
+            return 1
+
+        return 0
 
     def repair_tail_clashes(self, clashes: List[str]) -> None:
         """
@@ -253,7 +280,7 @@ class Repairer:
         for clash in clashes_to_resolve:
             atoms_to_rotate = self.get_clash_rotation(clash)
             old_coords = self.lipid.get_coord(atoms_to_rotate)
-            new_coords = self.rotate_tail(old_coords)
+            new_coords = self.rotate_tail(old_coords, self.theta)
             self.lipid.update_coords(atoms_to_rotate[2:], new_coords)
             self.detector.lipid_coordinates = self.lipid.extract_coordinates()
                 
