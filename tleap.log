@@ -1,0 +1,41 @@
+-I: Adding /Scr/msincla01/miniforge3/envs/cryo/dat/leap/prep to search path.
+-I: Adding /Scr/msincla01/miniforge3/envs/cryo/dat/leap/lib to search path.
+-I: Adding /Scr/msincla01/miniforge3/envs/cryo/dat/leap/parm to search path.
+-I: Adding /Scr/msincla01/miniforge3/envs/cryo/dat/leap/cmd to search path.
+-s: Ignoring all leaprc startup files.
+-f: Source /tmp/tmpt6m3h1v8.tleap.
+
+Welcome to LEaP!
+Sourcing: /tmp/tmpt6m3h1v8.tleap
+----- Source: /Scr/msincla01/miniforge3/envs/cryo/dat/leap/cmd/leaprc.protein.ff14SB
+----- Source of /Scr/msincla01/miniforge3/envs/cryo/dat/leap/cmd/leaprc.protein.ff14SB done
+Log file: ./leap.log
+Loading parameters: /Scr/msincla01/miniforge3/envs/cryo/dat/leap/parm/parm10.dat
+Reading title:
+PARM99 + frcmod.ff99SB + frcmod.parmbsc0 + OL3 for RNA
+Loading parameters: /Scr/msincla01/miniforge3/envs/cryo/dat/leap/parm/frcmod.ff14SB
+Reading force field modification type file (frcmod)
+Reading title:
+ff14SB protein backbone and sidechain parameters
+Loading library: /Scr/msincla01/miniforge3/envs/cryo/dat/leap/lib/amino12.lib
+Loading library: /Scr/msincla01/miniforge3/envs/cryo/dat/leap/lib/aminoct12.lib
+Loading library: /Scr/msincla01/miniforge3/envs/cryo/dat/leap/lib/aminont12.lib
+----- Source: /Scr/msincla01/miniforge3/envs/cryo/dat/leap/cmd/leaprc.lipid21
+----- Source of /Scr/msincla01/miniforge3/envs/cryo/dat/leap/cmd/leaprc.lipid21 done
+Log file: ./leap.log
+Loading parameters: /Scr/msincla01/miniforge3/envs/cryo/dat/leap/parm/lipid21.dat
+Reading title:
+AMBER Lipid21 v1.0 C. J. Dickson, R.C. Walker, I.R. Gould.
+Loading library: /Scr/msincla01/miniforge3/envs/cryo/dat/leap/lib/lipid21.lib
+----- Source: /Scr/msincla01/miniforge3/envs/cryo/dat/leap/cmd/leaprc.gaff
+----- Source of /Scr/msincla01/miniforge3/envs/cryo/dat/leap/cmd/leaprc.gaff done
+Log file: ./leap.log
+Loading parameters: /Scr/msincla01/miniforge3/envs/cryo/dat/leap/parm/gaff.dat
+Reading title:
+AMBER General Force Field for organic molecules (Version 1.81, May 2017)
+Using H(N)-modified Bondi radii
+
+/Scr/msincla01/miniforge3/envs/cryo/bin/teLeap: Fatal Error!
+Could not open file amber_format.pdb: not found
+
+Exiting LEaP: Errors = 1; Warnings = 0; Notes = 0.
