@@ -92,8 +92,6 @@ class Lipid(PDB):
         """
         # first, find any missing nodes from the lipid graph
         missing_atoms = self.get_missing_atoms()
-        
-        # second, group missing atoms into continuous chains of atoms which are bonded
         missing_chains = self.get_missing_chains(missing_atoms)
         
         template_lipid = Template(f'lipids_from_rtf/{self.lipid_type}.pdb', 

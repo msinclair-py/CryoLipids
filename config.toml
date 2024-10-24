@@ -12,11 +12,76 @@ implicit_solvent = true
 
 [lipids]
 [lipids.0]
+resid = 1
+restype = 'POPA'
+current_resname = 'POV'
+
+[lipids.1]
+resid = 2
+restype = 'POPA'
+current_resname = 'POV'
+
+[lipids.2]
+resid = 3
+restype = 'POPA'
+current_resname = 'POV'
+
+[lipids.3]
+resid = 4
+restype = 'POPA'
+current_resname = 'POV'
+
+[lipids.4]
 resid = 5
 restype = 'POPC'
 current_resname = 'POV'
 
-[lipids.1]
+[lipids.5]
+resid = 7
+restype = 'POPC'
+current_resname = 'POV'
+
+[lipids.6]
 resid = 9
 restype = 'POPA'
+current_resname = 'POV'
+
+[lipids.7]
+resid = 10
+restype = 'POPC'
+current_resname = 'POV'
+
+[lipids.8]
+resid = 11
+restype = 'POPC'
+current_resname = 'POV'
+
+[lipids.9]
+resid = 12
+restype = 'POPA'
+current_resname = 'POV'
+
+[lipids.10]
+resid = 13
+restype = 'POPC'
+current_resname = 'POV'
+
+[lipids.11]
+resid = 14
+restype = 'POPA'
+current_resname = 'POV'
+
+[lipids.12]
+resid = 15
+restype = 'POPA'
+current_resname = 'POV'
+
+[lipids.13]
+resid = 16
+restype = 'POPA'
+current_resname = 'POV'
+
+[lipids.14]
+resid = 17
+restype = 'POPC'
 current_resname = 'POV'

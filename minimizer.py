@@ -64,7 +64,7 @@ class Simulator:
     
     def prep(self):
         # Convert CHARMM lipid naming to AMBER convention
-        commands = [f"charmmlipid2amber.py -i {self.charmm_structure} -o renamed_lipids.pdb",
+        commands = [f"charmmlipid2amber.py -i {self.charmm_structure} -o renamed_lipids.pdb -c charmmlipid2.amber.csv",
                     f"pdb4amber -i renamed_lipids.pdb -o {self.amber_tmp_file}"]
         
         # Convert CHARMM PDB file to AMBER formatting
