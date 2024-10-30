@@ -65,7 +65,8 @@ class Simulator:
     def prep(self):
         # Convert CHARMM lipid naming to AMBER convention
         commands = [f"charmmlipid2amber.py -i {self.charmm_structure} -o renamed_lipids.pdb -c charmmlipid2.amber.csv",
-                    f"pdb4amber -i renamed_lipids.pdb -o {self.amber_tmp_file}"]
+                    f"pdb4amber -i renamed_lipids.pdb -o {self.amber_tmp_file} -y",
+                    f'sed -i "s/CD  ILE/CD1 ILE/" {self.amber_tmp_file}']
         
         # Convert CHARMM PDB file to AMBER formatting
         subprocess.run(commands[0], shell=True, capture_output=True, text=True)

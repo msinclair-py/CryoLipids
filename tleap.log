@@ -3,10 +3,10 @@
 -I: Adding /Scr/msincla01/miniforge3/envs/cryo/dat/leap/parm to search path.
 -I: Adding /Scr/msincla01/miniforge3/envs/cryo/dat/leap/cmd to search path.
 -s: Ignoring all leaprc startup files.
--f: Source /tmp/tmpa8_hl4jc.tleap.
+-f: Source /tmp/tmp1oy4pba9.tleap.
 
 Welcome to LEaP!
-Sourcing: /tmp/tmpa8_hl4jc.tleap
+Sourcing: /tmp/tmp1oy4pba9.tleap
 ----- Source: /Scr/msincla01/miniforge3/envs/cryo/dat/leap/cmd/leaprc.protein.ff14SB
 ----- Source of /Scr/msincla01/miniforge3/envs/cryo/dat/leap/cmd/leaprc.protein.ff14SB done
 Log file: ./leap.log

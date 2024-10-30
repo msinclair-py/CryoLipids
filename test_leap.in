@@ -4,9 +4,8 @@ source leaprc.gaff
 
 HSD = HID
 set default PBRadii mbondi2
-mol = loadpdb {amber_format}
+mol = loadpdb amber_noh.pdb
 
-
-saveamberparm mol {prmtop_file} {rst7_file}
+saveamberparm mol test.parm7 test.rst7
 
 quit
