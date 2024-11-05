@@ -21,19 +21,17 @@ protein_coords = [[float(i) for i in line[31:54].strip().split()]
 
 new_coords = dict()
 for id_, lip in config['lipids'].items():
-    print(f'{id_}: {lip}')
     # read in lipid(s) to be modeled
     lipid = Lipid(incomplete_lipids, **lip) 
 
     # model lipid
     lipid.model()
-    print('done modeling')
 
     # check for atomic clashes and repair accordingly
     repair = Repairer(lipid, protein_coords, theta, min_attempts, grid_spacing=1.5)
     repair.check_collisions()
     new_coords[id_] = repair.get_new_coords()
-    print('done repairing')
+print('Lipid repairs completed!')
 
 # output final static model
 pdb.merge_final_pdb(new_coords)
