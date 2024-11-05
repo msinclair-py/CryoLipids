@@ -2,8 +2,10 @@ source leaprc.protein.ff14SB
 source leaprc.lipid21
 source leaprc.gaff
 
+HSD = HID
 set default PBRadii mbondi2
 mol = loadpdb {amber_format}
+
 
 saveamberparm mol {prmtop_file} {rst7_file}
 

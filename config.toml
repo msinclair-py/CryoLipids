@@ -1,18 +1,77 @@
 [system]
-name = 'misc/bmrcd.pdb'
+name = 'BmrCd_of.pdb'
 output = 'test.pdb'
+
+[repair]
+theta = 15.0
+min_attempts = 24
 
 [minimize]
 vacuum = false
 implicit_solvent = false
 
 [lipids]
-[lipids.0]
+# [lipids.0]
+# resid = 2
+# restype = 'POPC'
+# current_resname = 'POV'
+
+[lipids.1]
+resid = 3
+restype = 'POPC'
+current_resname = 'POV'
+
+[lipids.2]
+resid = 4
+restype = 'POPA'
+current_resname = 'POV'
+
+[lipids.3]
 resid = 5
 restype = 'POPC'
 current_resname = 'POV'
 
-[lipids.1]
+[lipids.4]
+resid = 6
+restype = 'POPA'
+current_resname = 'POV'
+
+[lipids.5]
+resid = 7
+restype = 'POPC'
+current_resname = 'POV'
+
+[lipids.6]
 resid = 9
+restype = 'POPA'
+current_resname = 'POV'
+
+[lipids.7]
+resid = 10
+restype = 'POPC'
+current_resname = 'POV'
+
+[lipids.8]
+resid = 11
+restype = 'POPC'
+current_resname = 'POV'
+
+[lipids.9]
+resid = 12
+restype = 'POPA'
+current_resname = 'POV'
+
+[lipids.10]
+resid = 13
+restype = 'POPC'
+current_resname = 'POV'
+
+[lipids.11]
+resid = 15
+restype = 'POPC'
+current_resname = 'POV'
+
+[lipids.12]
+resid = 16
 restype = 'POPA'
 current_resname = 'POV'

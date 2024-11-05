@@ -41,7 +41,7 @@ class Simulator:
                  forcefield=['amber14-all.xml', 'amber14/protein.ff14SB.xml'], 
                  temp=300 * kelvin, press=1 * bar, nonbondedMethod=app.NoCutoff, 
                  constraints=app.HBonds, collision_freq=1 / picosecond,
-                 timestep=0.002 * picosecond, platform='CUDA', solvent=None):
+                 timestep=0.002 * picosecond, platform='CUDA', solvent=None, unittest=True):
         self.charmm_structure = structure
         self.output = output
         self.forcefield = forcefield
@@ -59,7 +59,8 @@ class Simulator:
         self.amber_tmp_file = 'amber_format.pdb'
         self.fixed_atoms = []
         self.simulation = None # use this to access simulation object
-   
+        self.unittest = unittest
+    
     def prep(self):
         # Create an array of indices for fixed atoms using beta column from charmm pdb input
         with open(self.charmm_structure) as file_in:
@@ -67,13 +68,19 @@ class Simulator:
             self.fixed_atoms = np.array(beta_values, dtype=float)
  
         # Convert CHARMM lipid naming to AMBER convention
-        commands = [f"charmmlipid2amber.py -i {self.charmm_structure} -o renamed_lipids.pdb",
-                    f"pdb4amber -i renamed_lipids.pdb -o {self.amber_tmp_file}"]
+        commands = [f"charmmlipid2amber.py -i {self.charmm_structure} -o renamed_lipids.pdb -c charmmlipid2amber.csv",
+                    f"pdb4amber -y -i renamed_lipids.pdb -o {self.amber_tmp_file}",
+                    f'sed -i "s/CD  ILE/CD1 ILE/" {self.amber_tmp_file}']
         
         # Convert CHARMM PDB file to AMBER formatting
-        subprocess.run(commands[0], shell=True, capture_output=True, text=True)
-        subprocess.run(commands[1], shell=True, capture_output=True, text=True)
-        
+        run1 = subprocess.run(commands[0], shell=True, capture_output=True, text=True)
+        run2 = subprocess.run(commands[1], shell=True, capture_output=True, text=True)
+        run3 = subprocess.run(commands[2], shell=True, capture_output=True, text=True)
+
+        if self.unittest:
+            print(f'charmmlipid out: {run1.stdout}')
+            print(f'pdb4amber out: {run2.stdout}')
+            
         # Create a temporary file
         with tempfile.NamedTemporaryFile(delete=True, mode='w+', suffix='.tleap') as temp_file:
             self.tleap_conf = temp_file.name
@@ -92,13 +99,12 @@ class Simulator:
             # Use the modified temporary file with tleap within the block
             try:
                 command = f'tleap -s -f {self.tleap_conf} > tleap.log'
-                subprocess.run(command, shell=True, capture_output=True, text=True)
+                run = subprocess.run(command, shell=True, capture_output=True, text=True)
             except Exception as e:
-                print(f'Error running tleap: {e}')
+                print(f'Error running tleap: {run.stdout}')
         
         # The temporary file is automatically deleted after the with block ends
-        
-        print('\n Prep done :) \n')
+        print('\n File prep done :) \n')
         
     def minimize(self, solvent=None):
 

@@ -99,11 +99,45 @@ class PDB:
         for line in lines:
             if any(aa in line for aa in self.aa):
                 prot.append(line[:60] + '  1.00' + ' ' * 12 + '\n')
+        
+        if self.check_multichain(prot):
+            return self.rename_chains(prot)
 
         return prot
     
+    @staticmethod
+    def check_multichain(pdb: List[str]) -> int:
+        cur_resid = 0
+        for line in pdb:
+            resid = int(line[22:26].strip())
+            if resid < cur_resid:
+                return 1
+            else:
+                cur_resid = resid
+
+        return 0
+
+    @staticmethod
+    def rename_chains(pdb: List[str]) -> List[str]:
+        chains = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        cur_resid = 0
+        chain = 0
+        cur_chain = chains[chain]
+
+        renamed = []
+        for line in pdb:
+            resid = int(line[22:26].strip())
+            if resid < cur_resid:
+                chain += 1
+                cur_chain = chains[chain]
+            
+            cur_resid = resid
+            renamed.append(f'{line[:21]}{cur_chain}{line[22:]}')
+
+        return renamed
+
     @property
-    def amino_acids(self):
+    def amino_acids(self) -> List[str]:
         return ['ARG', 'HIS', 'HSD', 'HSE', 'HSP', 'LYS', 'ASP', 'GLU', 
                 'SER', 'THR', 'ASN', 'GLN', 'CYS', 'GLY', 'PRO', 'ALA', 
                 'VAL', 'ILE', 'LEU', 'MET', 'PHE', 'TYR', 'TRP']

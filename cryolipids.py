@@ -9,6 +9,8 @@ config = tomllib.load(open('config.toml','rb'))
 input_name = config['system']['name']
 output_name = config['system']['output']
 
+theta, min_attempts = config['repair'].values()
+
 lipid_resids, lipid_types, modeled_resnames = unpack_lipids(config)
 
 # read in cryo em model file and process
@@ -20,10 +22,7 @@ protein_coords = [[float(i) for i in line[31:54].strip().split()]
 
 new_coords = dict()
 
-# modeling individual lipids
-print('Modeling lipids individually')
-for id, lip in config['lipids'].items():
-    print(id)
+for id_, lip in config['lipids'].items():
     # read in lipid(s) to be modeled
     lipid = Lipid(incomplete_lipids, **lip) 
     print('test 1')
@@ -31,25 +30,20 @@ for id, lip in config['lipids'].items():
     lipid.model()
     print('test 2')
     # check for atomic clashes and repair accordingly
-    repair = Repairer(lipid, protein_coords, grid_spacing=1.5)
-    print('repaired')
+    repair = Repairer(lipid, protein_coords, theta, min_attempts, grid_spacing=1.5)
     repair.check_collisions()
-    print('no collisions')
-    new_coords[id] = repair.get_new_coords()
+    new_coords[id_] = repair.get_new_coords()
+print('Lipid repairs completed!')
 
 # output final static model
 pdb.merge_final_pdb(new_coords)
 
-shashank_test = 'shashank_lipid_test.pdb'
 if config['minimize']['vacuum']:
     # do vacuum minimization
-    # minimizer = VacuumSimulator(f'{output_name}.pdb')
-    print(f'working on file: {shashank_test}')
-    minimizer = Simulator(f'{shashank_test}')
+    minimizer = Simulator(output_name)
     minimizer.prep()
     minimizer.minimize()
     
     if config['minimize']['implicit_solvent']:
         # do implicit solvent minimization and relaxation
-        # minimizer = ImplicitSolventSimulator('vacuum_min.pdb')
         minimizer.minimize(solvent='implicit')

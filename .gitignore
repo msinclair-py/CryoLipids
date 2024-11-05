@@ -1,9 +1,14 @@
 *swp
+*log
+*txt
 *ipynb*
 *pdb
 __pycache__/
 toy_models/
+test_grounds/
 misc/
 rtf_files/
 lipids_from_rtf/
 lipid_library/
+for_cryolipids/
+
