@@ -1,0 +1,117 @@
+data_template_NMR
+#
+_audit_conform.dict_name       mmcif_pdbx.dic
+_audit_conform.dict_version    5.329
+_audit_conform.dict_location   http://mmcif.pdb.org/dictionaries/ascii/mmcif_pdbx.dic
+#
+_pdbx_audit_support.funding_organization   'National Institutes of Health/National Institute of General Medical Sciences (NIH/NIGMS)'
+_pdbx_audit_support.country                'United States'
+_pdbx_audit_support.grant_number           XXXXX00000
+_pdbx_audit_support.ordinal                1
+#
+loop_
+_audit_author.name
+_audit_author.pdbx_ordinal
+_audit_author.identifier_ORCID
+'Shao, C.'     1 0000-0001-6817-7476 
+'Seaton, B.A.' 2 0000-0002-6139-7334 
+#
+loop_
+_pdbx_contact_author.id
+_pdbx_contact_author.name_last
+_pdbx_contact_author.name_first
+_pdbx_contact_author.name_mi
+_pdbx_contact_author.address_1
+_pdbx_contact_author.address_2
+_pdbx_contact_author.city
+_pdbx_contact_author.state_province
+_pdbx_contact_author.postal_code
+_pdbx_contact_author.country
+_pdbx_contact_author.email
+_pdbx_contact_author.phone
+_pdbx_contact_author.role
+_pdbx_contact_author.organization_type
+_pdbx_contact_author.identifier_ORCID
+1 Shao   Chenghua ?  'address line 1' 'address line 2' Boston MA 08807 'United States' chenghua@rcsb.rutgers.edu 0000000000 'principal investigator/group leader' academic 0000-0001-6817-7476 
+2 Seaton Barbara  A. 'address line 1' 'address line 2' Boston MA 08807 'United States' chenghua.shao@rcsb.org    0000000000 'responsible scientist'               academic 0000-0002-6139-7334 
+3 Shao   Chenghua ?  'address line 1' 'address line 2' Boston MA 08807 'United States' chenghua@rcsb.rutgers.edu 0000000000 investigator                          academic 0000-0001-6817-7476 
+#
+_citation.id                        primary
+_citation.title                     'Title of publication or manuscript'
+_citation.journal_abbrev            'To Be Published'
+_citation.year                      2022
+_citation.pdbx_database_id_PubMed   ?
+_citation.pdbx_database_id_DOI      ?
+#
+loop_
+_citation_author.citation_id
+_citation_author.name
+_citation_author.ordinal
+_citation_author.identifier_ORCID
+primary 'Shao, C.'     1 0000-0001-6817-7476 
+primary 'Seaton, B.A.' 2 0000-0002-6139-7334 
+#
+_struct.entry_id   'TO BE ASSIGNED, DO NOT CHANGE'
+_struct.title      'Crystal Structure of the C2 Domain of Bovine Lactadherin at 1.67 Angstrom Resolution'
+#
+_struct_keywords.entry_id        'TO BE ASSIGNED, DO NOT CHANGE'
+_struct_keywords.pdbx_keywords   'BLOOD CLOTTING'
+_struct_keywords.text            'anticoagulation, anti-coagulation, anticoagulant, anti-coagulant, membrane binding, phosphatidyl-serine binding, phosphatidylserine binding, Blood coagulation Factor V C2 homologue, Blood coagulation Factor VIII C2 homologue, milk fat globule, apoptosis, discoidin domain, FA58C, F5_F8_type_C, Alternative splicing, Cell adhesion, EGF-like domain, Fertilization, Glycoprotein'
+#
+_pdbx_struct_assembly_depositor_info.id                 1
+_pdbx_struct_assembly_depositor_info.details            'the asymmetric unit represents the biological assembly'
+_pdbx_struct_assembly_depositor_info.oligomeric_count   1
+#
+_pdbx_struct_assembly_auth_evidence_depositor_info.assembly_id            1
+_pdbx_struct_assembly_auth_evidence_depositor_info.id                     1
+_pdbx_struct_assembly_auth_evidence_depositor_info.experimental_support   SAXS
+_pdbx_struct_assembly_auth_evidence_depositor_info.details                'monomer in solution'
+#
+_entity.id                 1
+_entity.type               polymer
+_entity.src_method         man
+_entity.pdbx_description   Lactadherin
+_entity.pdbx_mutation      C100S
+_entity.details            ?
+#
+_entity_poly.entity_id                  1
+_entity_poly.type                       'polypeptide(L)'
+_entity_poly.pdbx_seq_one_letter_code   
+;CTEPLGLKDNTIPNKQITASSYYKTWGLSAFSWFPYYARLDNQGKFNAWTAQTNSASEWLQIDLGSQKRVTGIITQGARD
+FGHIQYVAAYRVAYGDDGVTWTEYKDPGASESKIFPGNMDNNSHKKNIFETPFQARFVRIQPVAWHNRITLRVELLGC
+;
+_entity_poly.pdbx_strand_id             A
+_entity_poly.pdbx_seq_db_id             Q95114
+_entity_poly.pdbx_seq_db_name           UNP
+#
+_entity_src_gen.entity_id                        1
+_entity_src_gen.pdbx_src_id                      1
+_entity_src_gen.pdbx_gene_src_scientific_name    'Homo sapiens'
+_entity_src_gen.pdbx_gene_src_ncbi_taxonomy_id   9606
+_entity_src_gen.pdbx_host_org_scientific_name    'Escherichia Coli'
+_entity_src_gen.pdbx_host_org_ncbi_taxonomy_id   562
+_entity_src_gen.pdbx_host_org_vector_type        plasmid
+_entity_src_gen.plasmid_name                     pET100
+#
+#
+_pdbx_nmr_spectrometer.spectrometer_id   1
+_pdbx_nmr_spectrometer.model             AMX
+_pdbx_nmr_spectrometer.type              ' '
+_pdbx_nmr_spectrometer.manufacturer      Bruker
+_pdbx_nmr_spectrometer.field_strength    120
+_pdbx_nmr_spectrometer.details           ' '
+#
+_pdbx_nmr_refine.entry_id           'TO BE ASSIGNED, DO NOT CHANGE'
+_pdbx_nmr_refine.method             'distance geometry'
+_pdbx_nmr_refine.details            ' '
+_pdbx_nmr_refine.software_ordinal   1
+#
+_pdbx_nmr_ensemble.entry_id                             'TO BE ASSIGNED, DO NOT CHANGE'
+_pdbx_nmr_ensemble.conformers_calculated_total_number   20
+_pdbx_nmr_ensemble.conformers_submitted_total_number    20
+_pdbx_nmr_ensemble.conformer_selection_criteria         'structures with the lowest energy'
+#
+_pdbx_nmr_representative.entry_id             'TO BE ASSIGNED, DO NOT CHANGE'
+_pdbx_nmr_representative.conformer_id         ' 1'
+_pdbx_nmr_representative.selection_criteria   'lowest energy'
+#

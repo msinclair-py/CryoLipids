@@ -7,7 +7,7 @@ theta = 15.0
 min_attempts = 24
 
 [minimize]
-vacuum = false
+vacuum = true
 implicit_solvent = false
 
 [lipids]

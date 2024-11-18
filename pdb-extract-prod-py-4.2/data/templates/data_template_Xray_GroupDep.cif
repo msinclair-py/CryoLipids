@@ -1,0 +1,278 @@
+data_template_Xray_GroupDep
+######################################################################
+#      PDB_extract template file in mmCIF format, for use after "-iENT" option in command line          
+# 
+#      All the mmCIF data items are defined in:
+#      http://mmCIF.wwpdb.org/
+#      Browse or search any item (e.g. _diffrn_source.source) at the top left search box, will show
+#      (1) The description of the cif item;
+#      (2) The acceptable data format, and the allowed values if from controlled enumeration;
+#
+#      Before editing mmCIF file template, please read the quick mmCIF format guide at
+#      http://mmcif.wwpdb.org/docs/tutorials/mechanics/pdbx-mmcif-syntax.html
+#
+#      Note the following 3 mmCIF rules that most beginners make errors on:
+#      (1) Cif item and value must have paired text, and empty value must be mark by "?";
+#      (2) A value with multiple words must be quoted;
+#      (3) Tabular values in 2+ rows must be placed below the cif items, in the same order
+#          of the items, and must have tabular marker of "loop_" placed above the cif items.
+#
+#      Any line starting with "#" sign is comment line not read by PDB_extract command.
+#      Comment line is either help text for users, or examples that are commented out.
+#      To put the example line into use, simply remove the "#" sign.
+#
+#      FAQ of mmCIF file process can be found at 
+#      http://mmcif.wwpdb.org/docs/faqs/pdbx-mmcif-faq-general.html
+#      
+#      Further questions can be emailed to: deposit@deposit.rcsb.org
+#
+######################################################################
+#
+#_pdbx_database_status category below records author's instruction on information release 
+#            
+_pdbx_database_status.entry_id                       ToBeAssigned
+_pdbx_database_status.dep_release_code_coordinates   "HOLD FOR PUBLICATION"
+_pdbx_database_status.dep_release_code_sequence      "HOLD FOR RELEASE"
+_pdbx_database_status.title_suppression              ?
+#
+##### audit_group #####
+#
+#_pdbx_audit_support category below records information about grant support
+#      
+_pdbx_audit_support.funding_organization "National Institutes of Health/National Institute of General Medical Sciences"
+_pdbx_audit_support.country              "United States"
+_pdbx_audit_support.grant_number         XX000000
+#
+#_audit_author category below records list of authors who have contributed to the structure solution
+#Name must be provided as quoted text of lastname, comma, a space, and firstname initial with dot
+#            
+loop_
+_audit_author.name
+"Lastname, F."   
+"Lastnameb, F."  
+"Lastnamec, F."  
+#
+#_pdbx_contact_author category below records list of authors who should receive communication regarding the deposition
+#Each entry must have at least one author with _pdbx_contact_author.role of "principal investigator/group leader"
+#The depositor, if not PI herself/himself, must provide her/his own contact information
+#_pdbx_contact_author.identifier_ORCID is mandatory, please go to https://orcid.org/ to verify or apply
+#
+loop_
+_pdbx_contact_author.id           
+_pdbx_contact_author.name_last           
+_pdbx_contact_author.name_first          
+_pdbx_contact_author.name_mi             
+_pdbx_contact_author.address_1           
+_pdbx_contact_author.address_2           
+_pdbx_contact_author.city                
+_pdbx_contact_author.state_province      
+_pdbx_contact_author.postal_code         
+_pdbx_contact_author.country             
+_pdbx_contact_author.email               
+_pdbx_contact_author.phone               
+_pdbx_contact_author.role                
+_pdbx_contact_author.organization_type   
+_pdbx_contact_author.identifier_ORCID    
+1 Lastname  Firstname  M. "1 academy drive" ? City State 00000 "United States" xtal1@academy.edu 0000000000 "principal investigator/group leader" academic 0000-0000-0000-0000
+2 Lastnameb Firstnameb M. "1 academy drive" ? City State 00000 "United States" xtal2@academy.edu 0000000000 investigator academic 0000-0000-0000-0000
+#
+#_pdbx_deposit_group category below records Group information only for GroupDep deposition
+#            
+_pdbx_deposit_group.group_title         "the group title you wish to show"
+_pdbx_deposit_group.group_description   "further description of the group"
+_pdbx_deposit_group.group_type          "ground state or changed state"       
+#      
+##### citation_group #####
+#
+#_citation category below records information for publication or manuscript to be submitted      
+#
+_citation.id                        primary 
+_citation.title                     "title of publication or manuscript"
+_citation.journal_abbrev            "To be published"
+_citation.journal_volume            ?
+_citation.page_first                ?
+_citation.page_last                 ?
+_citation.year                      ?
+_citation.pdbx_database_id_PubMed   ?
+_citation.pdbx_database_id_DOI      ?
+# 
+#_citation_author category below records alist of uthors for publication or manuscript to be submitted      
+#
+loop_
+_citation_author.citation_id 
+_citation_author.name 
+primary "Last, F."     
+primary "Lastb, F."    
+primary "Lastc, F." 
+#
+###### struct_group #####     
+#
+#_struct category below records general information about the structure
+#_struct.pdbx_CASP_flag value should be "?" except for target of Critical Assessment of Structure Prediction 
+#
+_struct.entry_id                     ToBeAssigned      
+_struct.title                        "Crystal Structure of XXXX"
+_struct.pdbx_CASP_flag               ? 
+# 
+#_struct_keywords category below records keywords to be associated with the structure, with one pair of quotes, separated by comma
+#
+_struct_keywords.entry_id        ToBeAssigned
+_struct_keywords.pdbx_keywords   Hydrolase 
+_struct_keywords.text            "keyword1, keyword2, keyword3"
+#
+#_pdbx_struct_assembly_depositor_info category below records general description of biological assembly
+#
+_pdbx_struct_assembly_depositor_info.id                  1
+_pdbx_struct_assembly_depositor_info.details             "asymmetric unit represents biological assembly"
+_pdbx_struct_assembly_depositor_info.oligomeric_count    1
+#
+#_pdbx_struct_assembly_gen_depositor category below records operations to generate biological assembly
+#
+_pdbx_struct_assembly_gen_depositor_info.assembly_id         1
+_pdbx_struct_assembly_gen_depositor_info.chain_id_list       A
+_pdbx_struct_assembly_gen_depositor_info.all_chains          Y
+_pdbx_struct_assembly_gen_depositor_info.at_unit_matrix      Y
+_pdbx_struct_assembly_gen_depositor_info.full_matrices       
+;1 0 0 0
+0 1 0 0
+0 0 1 0
+;
+#      
+#_pdbx_struct_assembly_auth_evidence_depositor_info category below records experimental evidence for biological assembly
+#
+_pdbx_struct_assembly_auth_evidence_depositor_info.assembly_id           1
+_pdbx_struct_assembly_auth_evidence_depositor_info.id                    1
+_pdbx_struct_assembly_auth_evidence_depositor_info.experimental_support  SAXS
+_pdbx_struct_assembly_auth_evidence_depositor_info.details               ?
+#
+# 
+#_pdbx_entry_details category below specifies if the structure contains a ligand that is the research focus 
+# or ligand of interest such as binding to active site, inhibitor, potential drug, etc.
+#
+_pdbx_entry_details.entry_id                ToBeAssigned
+_pdbx_entry_details.has_ligand_of_interest  Y
+#
+#_pdbx_entity_instance_feature category below specify which ligand (three letter code) is the ligand of interest
+#
+_pdbx_entity_instance_feature.ordinal       1
+_pdbx_entity_instance_feature.auth_comp_id  "Ligand three letter code, e.g. ATP"
+_pdbx_entity_instance_feature.comp_id       "Ligand three letter code. e.g. ATP"
+_pdbx_entity_instance_feature.feature_type  "SUBJECT OF INVESTIGATION"
+#      
+###### exptl_group #####
+#
+#_exptl catetory below records experimental method and crystal number
+#
+_exptl.method                     "X-RAY DIFFRACTION"
+_exptl.crystals_number            1 
+#
+#_exptl_crystal category below records information about crystals
+#
+_exptl_crystal.id                           1
+_exptl_crystal.density_Matthews             2.8
+_exptl_crystal.density_percent_sol          56.6
+#
+#_exptl_crystal_grow category below records information about crystal growth
+#
+_exptl_crystal_grow.crystal_id      1
+_exptl_crystal_grow.method          "VAPOR DIFFUSION, HANGING DROP"
+_exptl_crystal_grow.pH              7.0
+_exptl_crystal_grow.temp            291
+_exptl_crystal_grow.pdbx_details    "1.0 M K2HPO4, 0.7 M NaH2PO4, 75 mM sodium acetate pH 4.5, 2% DMSO"
+_exptl_crystal_grow.pdbx_pH_range   ? 
+#
+###### diffrn_group #####
+#
+#_diffrn category below records general information about diffraction      
+#
+_diffrn.id                              1 
+_diffrn.crystal_id                      1
+_diffrn.ambient_temp                    100
+#
+#_diffrn_source category below records information about diffraction source
+#
+_diffrn_source.diffrn_id                      1
+_diffrn_source.source                         Synchrotron
+_diffrn_source.type                           "DIAMOND BEAMLINE I24"
+_diffrn_source.pdbx_wavelength_list           1.54180
+#
+#_diffrn_detector category below records information about data collection date and diffraction detector      
+# 
+_diffrn_detector.diffrn_id              1
+_diffrn_detector.detector               PIXEL
+_diffrn_detector.type                   "DECTRIS PILATUS3 6M"
+_diffrn_detector.pdbx_collection_date   2000-01-01
+#
+#_diffrn_radiation category below records further information about diffraction       
+#
+_diffrn_radiation.diffrn_id                        1
+_diffrn_radiation.pdbx_scattering_type		   x-ray
+_diffrn_radiation.pdbx_diffrn_protocol             "SINGLE WAVELENGTH"
+_diffrn_radiation.wavelength_id                    1
+_diffrn_radiation.pdbx_monochromatic_or_laue_m_l   m
+_diffrn_radiation.monochromator                    ?
+#
+#_diffrn_radiation_wavelength category below records information about wavelength      
+# 
+_diffrn_radiation_wavelength.id           1
+_diffrn_radiation_wavelength.wavelength   1.54180
+#
+###### entity_group #####
+#
+#_entity category below records information about polymer entity
+#_entity.src_method, the method to obtain protein, can only take one of the following 3 values:
+#"man" if the polymer was over-expressed from recombinant DNA in a living organism,
+#      and then _entity_src_gen category must be filled with match between _entity.id and _entity_src_gen.entity_id;
+#"nat" if the polymer was extracted/purified from a natural source 
+#      and then _entity_src_nat category must be filled with match between _entity.id and _entity_src_nat.entity_id;
+#"syn" if the polymer was chemically synthesized without using living organism
+#      and then _pdbx_entity_src_syn category must be filled with match between _entity.id and _pdbx_entity_src_syn.entity_id.
+#
+_entity.id 		 1						
+_entity.type             polymer              
+_entity.src_method 	 man	                
+_entity.pdbx_description "Name of Protein or DNA or RNA" 				
+_entity.pdbx_mutation    ?
+_entity.pdbx_fragment    ?
+_entity.details          ?
+#
+#_entity_poly category below records information about polymer type and sequence      
+#_entity_poly.pdbx_seq_one_letter_code must take one letter code for standard amino acid or nucleotide
+#except for modified residue such as MSE(Se-Met) or cap residue suhc as ACE(Acetyl),
+#where PDB 3-letter code must be provide in parenthesis, e.g. "(ACE)MGTF(MSE)..."  
+#
+_entity_poly.entity_id                1
+_entity_poly.type                     "polypeptide(L)"
+_entity_poly.pdbx_seq_one_letter_code "NFDAERDALNIETAIKTKGVDEVTIVNILTNRSNAQRQDIAFAYQRRTKKELASALKSALSGHLETVILGLLKTPAQYDASELKASMKGLGTDEDSLIEIICSRTNQELQEINRVYKEMYKTDLEKDIISDTSGDFRKLMVALAKGRRAEDGSVIDYELIDQDARDLYDAGVKRKGTDVPKWISICSRTNQELQEINRVYKEMYKTDLEKDIISDTSGDFRKLMVALAKGRRAEDGSVIDYELIDQDARDLYDAGVKRKGTDVPKWISIMTERSVPHLQKVFDRYKSYSPYDMLESIRKEVKGDLENAFLNLVQCIQNKPLYFADRLYDSMKGKGTRDKVLIRIMVSRSEVDMLKIRSEFKRKYGKSLYYYIQQDTKGDYQKALLYLCGGDD"
+_entity_poly.pdbx_strand_id           A
+_entity_poly.pdbx_seq_db_id           P07355             
+_entity_poly.pdbx_seq_db_name         UNP            
+#
+#_entity_src_gen category below records source information only for polymer where _entity.src_method has value of "man"     
+# 
+_entity_src_gen.entity_id                      1
+_entity_src_gen.pdbx_src_id                    1
+_entity_src_gen.pdbx_gene_src_scientific_name  "Homo sapiens"
+_entity_src_gen.pdbx_gene_src_ncbi_taxonomy_id 9606
+_entity_src_gen.pdbx_host_org_scientific_name  "Escherichia coli BL21(DE3)"
+_entity_src_gen.pdbx_host_org_ncbi_taxonomy_id 469008
+_entity_src_gen.pdbx_host_org_vector_type      plasmid
+_entity_src_gen.pdbx_host_org_vector           ?
+_entity_src_gen.plasmid_name                   ?
+#
+#_entity_src_nat category below records source information only for polymer where _entity.src_method has value of "nat"
+#
+#_entity_src_nat.entity_id                 1
+#_entity_src_nat.pdbx_src_id               1
+#_entity_src_nat.pdbx_organism_scientific  "Homo sapiens"
+#_entity_src_nat.pdbx_ncbi_taxonomy_id     9606
+#_entity_src_nat.details                   ?
+#
+#_pdbx_entity_src_syn category below records source information only for polymer where _entity.src_method has value of "syn"
+#
+#_pdbx_entity_src_syn.entity_id              1
+#_pdbx_entity_src_syn.pdbx_src_id            1
+#_pdbx_entity_src_syn.organism_scientific    "Homo sapiens"
+#_pdbx_entity_src_syn.ncbi_taxonomy_id       9606
+#_pdbx_entity_src_syn.details                ?
+#

@@ -41,11 +41,13 @@ print('Lipid repairs completed!')
 pdb.merge_final_pdb(new_coords)
 
 if config['minimize']['vacuum']:
+    print('Entering OpenMM stage ...')
     # do vacuum minimization
     minimizer = Simulator(output_name)
     minimizer.prep()
     minimizer.minimize()
+    minimizer.vacuum_run()
     
-    if config['minimize']['implicit_solvent']:
-        # do implicit solvent minimization and relaxation
-        minimizer.minimize(solvent='implicit')
+    # if config['minimize']['implicit_solvent']:
+    #     # do implicit solvent minimization and relaxation
+    #     minimizer.minimize(solvent='implicit')
