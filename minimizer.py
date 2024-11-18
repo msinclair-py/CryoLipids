@@ -1,9 +1,12 @@
-import openmm as mm
+#import openmm as mm
+import mdtraj as md
+import numpy as np
 import openmm.app as app
 from openmm.unit import *
 from openmm.app import *
 from openmm import *
 import os, shutil, tempfile
+import openmm.unit as unit
 from sys import stdout, exit, stderr
 import subprocess
 
@@ -40,7 +43,7 @@ class Simulator:
                  forcefield=['amber14-all.xml', 'amber14/protein.ff14SB.xml'], 
                  temp=300 * kelvin, press=1 * bar, nonbondedMethod=app.NoCutoff, 
                  constraints=app.HBonds, collision_freq=1 / picosecond,
-                 timestep=0.002 * picosecond, platform='CUDA', solvent=None):
+                 timestep=0.002 * picosecond, platform='CUDA', solvent=None, unittest=True):
         self.charmm_structure = structure
         self.output = output
         self.forcefield = forcefield
@@ -56,22 +59,43 @@ class Simulator:
         self.prmtop = 'amber_file.prmtop'
         self.tleap_template = 'tleap.in'
         self.amber_tmp_file = 'amber_format.pdb'
-        # self.output = '' # this is for all output in commands list
-        # self.minimized = 'minimize_run.pdb'
-        # self.vacuumed = 'vacuum_run.pdb'
-        # self.implicited = 'implicit_run.pdb'
+        self.fixed_atoms = []
         self.simulation = None # use this to access simulation object
+        self.unittest = unittest
     
     def prep(self):
+
+        # Create an array of indices for fixed atoms using beta column from charmm pdb input
+        with open(f'{self.charmm_structure}') as file_in:
+            try:
+                # beta_values = [line[54:60].strip() for line in file_in]
+                beta_values = [line[54:60].strip() for line in file_in if line[54:60].strip()]
+                self.fixed_atoms = np.array(beta_values, dtype=float)
+                # Count the number of 1s and 0s
+                count_ones = np.count_nonzero(self.fixed_atoms == 1)
+                count_zeros = np.count_nonzero(self.fixed_atoms == 0)
+                print(f'beta values is {len(self.fixed_atoms)}, with {count_ones} ones and {count_zeros} zeros')
+            except ValueError:
+                print(f'beta values broke {beta_values}')
+                # Count the number of 1s and 0s
+                count_ones = np.count_nonzero(self.fixed_atoms == 1)
+                count_zeros = np.count_nonzero(self.fixed_atoms == 0)
+                print(f'beta values is {len(self.fixed_atoms)}, with {count_ones} ones and {count_zeros} zeros')
+        
         # Convert CHARMM lipid naming to AMBER convention
-        commands = [f"charmmlipid2amber.py -i {self.charmm_structure} -o renamed_lipids.pdb -c charmmlipid2.amber.csv",
-                    f"pdb4amber -i renamed_lipids.pdb -o {self.amber_tmp_file} -y",
+        commands = [f"charmmlipid2amber.py -i {self.charmm_structure} -o renamed_lipids.pdb -c charmmlipid2amber.csv",
+                    f"pdb4amber -y -i renamed_lipids.pdb -o {self.amber_tmp_file}",
                     f'sed -i "s/CD  ILE/CD1 ILE/" {self.amber_tmp_file}']
         
         # Convert CHARMM PDB file to AMBER formatting
-        subprocess.run(commands[0], shell=True, capture_output=True, text=True)
-        subprocess.run(commands[1], shell=True, capture_output=True, text=True)
-        
+        run1 = subprocess.run(commands[0], shell=True, capture_output=True, text=True)
+        run2 = subprocess.run(commands[1], shell=True, capture_output=True, text=True)
+        run3 = subprocess.run(commands[2], shell=True, capture_output=True, text=True)
+
+        if self.unittest:
+            print(f'charmmlipid out: {run1.stdout}')
+            print(f'pdb4amber out: {run2.stdout}')
+            
         # Create a temporary file
         with tempfile.NamedTemporaryFile(delete=True, mode='w+', suffix='.tleap') as temp_file:
             self.tleap_conf = temp_file.name
@@ -90,12 +114,13 @@ class Simulator:
             # Use the modified temporary file with tleap within the block
             try:
                 command = f'tleap -s -f {self.tleap_conf} > tleap.log'
-                subprocess.run(command, shell=True, capture_output=True, text=True)
+                run = subprocess.run(command, shell=True, capture_output=True, text=True)
             except Exception as e:
-                print(f'Error running tleap: {e}')
+                print(f'Error running tleap: {run.stdout}')
         
         # The temporary file is automatically deleted after the with block ends
-        print('\n Prep done :) \n')
+
+        print('\n File prep done :) \n')
         
     def minimize(self, solvent=None):
 
@@ -103,13 +128,29 @@ class Simulator:
         
         inpcrd = AmberInpcrdFile(self.rst7)
         prmtop = AmberPrmtopFile(self.prmtop)
-        
+
         if self.solvent is None:
             system = prmtop.createSystem(constraints=HBonds)
+                    
+            # OpenMM is an Equus asinus and requires that all atomic positions are positive to begin 
+            # with, or it will forcibly translate the system which will royally penetrate any carefully
+            # constructed constraints. We will address this error using the Modeller class in OpenMM
+            
+            modeller = Modeller(prmtop.topology, inpcrd.positions)
+            positions = modeller.getPositions().value_in_unit(nanometer)
+            min_position = np.min(positions, axis=0)
+            translated = np.round(positions - min_position, 4)
+            vec3_positions = [Vec3(*coord) * unit.nanometer for coord in translated]
+            modeller.positions = vec3_positions
+            
+            # Fix atoms that have been resolved experimentally
+            for atom_index, value in enumerate(self.fixed_atoms):
+                if value==1:
+                    system.setParticleMass(atom_index, value)
 
             integrator = LangevinMiddleIntegrator(self.temp, self.collision_freq, self.ts)
             self.simulation = Simulation(prmtop.topology, system, integrator)
-            self.simulation.context.setPositions(inpcrd.positions)
+            self.simulation.context.setPositions(modeller.positions)
             self.simulation.minimizeEnergy()
             
             with open('vacuum_minimized.pdb', 'w') as output:
@@ -120,13 +161,28 @@ class Simulator:
             print('\n Vacuum minimizer done :) \n')
 
         elif solvent == 'implicit':
-            # forcefield = ForceField(*self.forcefield, self.solvent)
             system = prmtop.createSystem(constraints=HBonds, implicitSolvent=GBn2) # implicit solvent
+                    
+            # OpenMM is an Equus asinus and requires that all atomic positions are positive to begin 
+            # with, or it will forcibly translate the system which will royally penetrate any carefully
+            # constructed constraints. We will address this error using the Modeller class in OpenMM
+            
+            modeller = Modeller(prmtop.topology, inpcrd.positions)
+            positions = modeller.getPositions().value_in_unit(nanometer)
+            min_position = np.min(positions, axis=0)
+            translated = np.round(positions - min_position, 4)
+            vec3_positions = [Vec3(*coord) * unit.nanometer for coord in translated]
+            modeller.positions = vec3_positions
+            
+            # Fix atoms that have been resolved experimentally
+            for atom_index, value in enumerate(self.fixed_atoms):
+                if value==1:
+                    system.setParticleMass(atom_index, value)
 
             integrator = LangevinMiddleIntegrator(self.temp, self.collision_freq, self.ts)
             self.simulation = Simulation(prmtop.topology, system, integrator)
             self.simulation.loadState('vacuum_minimized.xml')
-            self.simulation.context.setPositions(inpcrd.positions)
+            self.simulation.context.setPositions(modeller.positions)
             self.simulation.minimizeEnergy()
 
             with open('implicit_minimized.pdb', 'w') as output:
