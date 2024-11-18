@@ -87,38 +87,38 @@ class Simulator:
                     f"pdb4amber -y -i renamed_lipids.pdb -o {self.amber_tmp_file}",
                     f'sed -i "s/CD  ILE/CD1 ILE/" {self.amber_tmp_file}']
         
-        # # Convert CHARMM PDB file to AMBER formatting
-        # run1 = subprocess.run(commands[0], shell=True, capture_output=True, text=True)
-        # run2 = subprocess.run(commands[1], shell=True, capture_output=True, text=True)
-        # run3 = subprocess.run(commands[2], shell=True, capture_output=True, text=True)
+        # Convert CHARMM PDB file to AMBER formatting
+        run1 = subprocess.run(commands[0], shell=True, capture_output=True, text=True)
+        run2 = subprocess.run(commands[1], shell=True, capture_output=True, text=True)
+        run3 = subprocess.run(commands[2], shell=True, capture_output=True, text=True)
 
-        # if self.unittest:
-        #     print(f'charmmlipid out: {run1.stdout}')
-        #     print(f'pdb4amber out: {run2.stdout}')
+        if self.unittest:
+            print(f'charmmlipid out: {run1.stdout}')
+            print(f'pdb4amber out: {run2.stdout}')
             
-        # # Create a temporary file
-        # with tempfile.NamedTemporaryFile(delete=True, mode='w+', suffix='.tleap') as temp_file:
-        #     self.tleap_conf = temp_file.name
+        # Create a temporary file
+        with tempfile.NamedTemporaryFile(delete=True, mode='w+', suffix='.tleap') as temp_file:
+            self.tleap_conf = temp_file.name
             
-        #     # Read the original tleap file and replace placeholders
-        #     with open(self.tleap_template, 'r') as original_file:
-        #         content = original_file.read()
-        #         content = content.replace('{amber_format}', self.amber_tmp_file)
-        #         content = content.replace('{prmtop_file}', self.prmtop)
-        #         content = content.replace('{rst7_file}', self.rst7)
+            # Read the original tleap file and replace placeholders
+            with open(self.tleap_template, 'r') as original_file:
+                content = original_file.read()
+                content = content.replace('{amber_format}', self.amber_tmp_file)
+                content = content.replace('{prmtop_file}', self.prmtop)
+                content = content.replace('{rst7_file}', self.rst7)
             
-        #     # Write the modified content to the temporary file
-        #     temp_file.write(content)
-        #     temp_file.flush()  # Ensure content is written to disk
+            # Write the modified content to the temporary file
+            temp_file.write(content)
+            temp_file.flush()  # Ensure content is written to disk
         
-        #     # Use the modified temporary file with tleap within the block
-        #     try:
-        #         command = f'tleap -s -f {self.tleap_conf} > tleap.log'
-        #         run = subprocess.run(command, shell=True, capture_output=True, text=True)
-        #     except Exception as e:
-        #         print(f'Error running tleap: {run.stdout}')
+            # Use the modified temporary file with tleap within the block
+            try:
+                command = f'tleap -s -f {self.tleap_conf} > tleap.log'
+                run = subprocess.run(command, shell=True, capture_output=True, text=True)
+            except Exception as e:
+                print(f'Error running tleap: {run.stdout}')
         
-        # # The temporary file is automatically deleted after the with block ends
+        # The temporary file is automatically deleted after the with block ends
 
         print('\n File prep done :) \n')
         
